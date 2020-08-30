@@ -1,5 +1,5 @@
 h1.page-header.page-title {
-    padding: 15px 15px 15px;
+    padding: 15px;
     margin: -20px -20px 20px;
     font-size: 1.8em;
 }
@@ -31,7 +31,7 @@ table th.tablesorter-header {
     text-decoration: none;
 }
 .divider-tab {
-    margin: 4px 0px;
+    margin: 4px 0;
     overflow:hidden;
     height: 1px;
     border-bottom: 1px solid #ddd;
@@ -40,7 +40,7 @@ table th.tablesorter-header {
     margin-top: 12%;
 }
 .gutmarginleft {
-    margin-left: 0px !important;
+    margin-left: 0 !important;
 }
 .footer {
   height: 30px;
@@ -108,55 +108,55 @@ table th.tablesorter-header {
 @-webkit-keyframes load4 {
   0%,
   100% {
-    box-shadow: 0em -3em 0em 0.2em rgba(156, 156, 156, 0.50), 2em -2em 0 0em rgba(156, 156, 156, 0.50), 3em 0em 0 -0.5em rgba(156, 156, 156, 0.50), 2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), 0em 3em 0 -0.5em rgba(156, 156, 156, 0.50), -2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), -3em 0em 0 -0.5em rgba(156, 156, 156, 0.50), -2em -2em 0 0em rgba(156, 156, 156, 0.50);
+    box-shadow: 0 -3em 0 0.2em rgba(156, 156, 156, 0.50), 2em -2em 0 0 rgba(156, 156, 156, 0.50), 3em 0 0 -0.5em rgba(156, 156, 156, 0.50), 2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), 0 3em 0 -0.5em rgba(156, 156, 156, 0.50), -2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), -3em 0 0 -0.5em rgba(156, 156, 156, 0.50), -2em -2em 0 0 rgba(156, 156, 156, 0.50);
   }
   12.5% {
-    box-shadow: 0em -3em 0em 0em rgba(156, 156, 156, 0.50), 2em -2em 0 0.2em rgba(156, 156, 156, 0.50), 3em 0em 0 0em rgba(156, 156, 156, 0.50), 2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), 0em 3em 0 -0.5em rgba(156, 156, 156, 0.50), -2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), -3em 0em 0 -0.5em rgba(156, 156, 156, 0.50), -2em -2em 0 -0.5em rgba(156, 156, 156, 0.50);
+    box-shadow: 0 -3em 0 0 rgba(156, 156, 156, 0.50), 2em -2em 0 0.2em rgba(156, 156, 156, 0.50), 3em 0 0 0 rgba(156, 156, 156, 0.50), 2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), 0 3em 0 -0.5em rgba(156, 156, 156, 0.50), -2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), -3em 0 0 -0.5em rgba(156, 156, 156, 0.50), -2em -2em 0 -0.5em rgba(156, 156, 156, 0.50);
   }
   25% {
-    box-shadow: 0em -3em 0em -0.5em rgba(156, 156, 156, 0.50), 2em -2em 0 0em rgba(156, 156, 156, 0.50), 3em 0em 0 0.2em rgba(156, 156, 156, 0.50), 2em 2em 0 0em rgba(156, 156, 156, 0.50), 0em 3em 0 -0.5em rgba(156, 156, 156, 0.50), -2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), -3em 0em 0 -0.5em rgba(156, 156, 156, 0.50), -2em -2em 0 -0.5em rgba(156, 156, 156, 0.50);
+    box-shadow: 0 -3em 0 -0.5em rgba(156, 156, 156, 0.50), 2em -2em 0 0 rgba(156, 156, 156, 0.50), 3em 0 0 0.2em rgba(156, 156, 156, 0.50), 2em 2em 0 0 rgba(156, 156, 156, 0.50), 0 3em 0 -0.5em rgba(156, 156, 156, 0.50), -2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), -3em 0 0 -0.5em rgba(156, 156, 156, 0.50), -2em -2em 0 -0.5em rgba(156, 156, 156, 0.50);
   }
   37.5% {
-    box-shadow: 0em -3em 0em -0.5em rgba(156, 156, 156, 0.50), 2em -2em 0 -0.5em rgba(156, 156, 156, 0.50), 3em 0em 0 0em rgba(156, 156, 156, 0.50), 2em 2em 0 0.2em rgba(156, 156, 156, 0.50), 0em 3em 0 0em rgba(156, 156, 156, 0.50), -2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), -3em 0em 0 -0.5em rgba(156, 156, 156, 0.50), -2em -2em 0 -0.5em rgba(156, 156, 156, 0.50);
+    box-shadow: 0 -3em 0 -0.5em rgba(156, 156, 156, 0.50), 2em -2em 0 -0.5em rgba(156, 156, 156, 0.50), 3em 0 0 0 rgba(156, 156, 156, 0.50), 2em 2em 0 0.2em rgba(156, 156, 156, 0.50), 0 3em 0 0 rgba(156, 156, 156, 0.50), -2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), -3em 0 0 -0.5em rgba(156, 156, 156, 0.50), -2em -2em 0 -0.5em rgba(156, 156, 156, 0.50);
   }
   50% {
-    box-shadow: 0em -3em 0em -0.5em rgba(156, 156, 156, 0.50), 2em -2em 0 -0.5em rgba(156, 156, 156, 0.50), 3em 0em 0 -0.5em rgba(156, 156, 156, 0.50), 2em 2em 0 0em rgba(156, 156, 156, 0.50), 0em 3em 0 0.2em rgba(156, 156, 156, 0.50), -2em 2em 0 0em rgba(156, 156, 156, 0.50), -3em 0em 0 -0.5em rgba(156, 156, 156, 0.50), -2em -2em 0 -0.5em rgba(156, 156, 156, 0.50);
+    box-shadow: 0 -3em 0 -0.5em rgba(156, 156, 156, 0.50), 2em -2em 0 -0.5em rgba(156, 156, 156, 0.50), 3em 0 0 -0.5em rgba(156, 156, 156, 0.50), 2em 2em 0 0 rgba(156, 156, 156, 0.50), 0 3em 0 0.2em rgba(156, 156, 156, 0.50), -2em 2em 0 0 rgba(156, 156, 156, 0.50), -3em 0 0 -0.5em rgba(156, 156, 156, 0.50), -2em -2em 0 -0.5em rgba(156, 156, 156, 0.50);
   }
   62.5% {
-    box-shadow: 0em -3em 0em -0.5em rgba(156, 156, 156, 0.50), 2em -2em 0 -0.5em rgba(156, 156, 156, 0.50), 3em 0em 0 -0.5em rgba(156, 156, 156, 0.50), 2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), 0em 3em 0 0em rgba(156, 156, 156, 0.50), -2em 2em 0 0.2em rgba(156, 156, 156, 0.50), -3em 0em 0 0em rgba(156, 156, 156, 0.50), -2em -2em 0 -0.5em rgba(156, 156, 156, 0.50);
+    box-shadow: 0 -3em 0 -0.5em rgba(156, 156, 156, 0.50), 2em -2em 0 -0.5em rgba(156, 156, 156, 0.50), 3em 0 0 -0.5em rgba(156, 156, 156, 0.50), 2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), 0 3em 0 0 rgba(156, 156, 156, 0.50), -2em 2em 0 0.2em rgba(156, 156, 156, 0.50), -3em 0 0 0 rgba(156, 156, 156, 0.50), -2em -2em 0 -0.5em rgba(156, 156, 156, 0.50);
   }
   75% {
-    box-shadow: 0em -3em 0em -0.5em rgba(156, 156, 156, 0.50), 2em -2em 0 -0.5em rgba(156, 156, 156, 0.50), 3em 0em 0 -0.5em rgba(156, 156, 156, 0.50), 2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), 0em 3em 0 -0.5em rgba(156, 156, 156, 0.50), -2em 2em 0 0em rgba(156, 156, 156, 0.50), -3em 0em 0 0.2em rgba(156, 156, 156, 0.50), -2em -2em 0 0em rgba(156, 156, 156, 0.50);
+    box-shadow: 0 -3em 0 -0.5em rgba(156, 156, 156, 0.50), 2em -2em 0 -0.5em rgba(156, 156, 156, 0.50), 3em 0 0 -0.5em rgba(156, 156, 156, 0.50), 2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), 0 3em 0 -0.5em rgba(156, 156, 156, 0.50), -2em 2em 0 0 rgba(156, 156, 156, 0.50), -3em 0 0 0.2em rgba(156, 156, 156, 0.50), -2em -2em 0 0 rgba(156, 156, 156, 0.50);
   }
   87.5% {
-    box-shadow: 0em -3em 0em 0em rgba(156, 156, 156, 0.50), 2em -2em 0 -0.5em rgba(156, 156, 156, 0.50), 3em 0em 0 -0.5em rgba(156, 156, 156, 0.50), 2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), 0em 3em 0 -0.5em rgba(156, 156, 156, 0.50), -2em 2em 0 0em rgba(156, 156, 156, 0.50), -3em 0em 0 0em rgba(156, 156, 156, 0.50), -2em -2em 0 0.2em rgba(156, 156, 156, 0.50);
+    box-shadow: 0 -3em 0 0 rgba(156, 156, 156, 0.50), 2em -2em 0 -0.5em rgba(156, 156, 156, 0.50), 3em 0 0 -0.5em rgba(156, 156, 156, 0.50), 2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), 0 3em 0 -0.5em rgba(156, 156, 156, 0.50), -2em 2em 0 0 rgba(156, 156, 156, 0.50), -3em 0 0 0 rgba(156, 156, 156, 0.50), -2em -2em 0 0.2em rgba(156, 156, 156, 0.50);
   }
 }
 @keyframes load4 {
   0%,
   100% {
-    box-shadow: 0em -3em 0em 0.2em rgba(156, 156, 156, 0.50), 2em -2em 0 0em rgba(156, 156, 156, 0.50), 3em 0em 0 -0.5em rgba(156, 156, 156, 0.50), 2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), 0em 3em 0 -0.5em rgba(156, 156, 156, 0.50), -2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), -3em 0em 0 -0.5em rgba(156, 156, 156, 0.50), -2em -2em 0 0em rgba(156, 156, 156, 0.50);
+    box-shadow: 0 -3em 0 0.2em rgba(156, 156, 156, 0.50), 2em -2em 0 0 rgba(156, 156, 156, 0.50), 3em 0 0 -0.5em rgba(156, 156, 156, 0.50), 2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), 0 3em 0 -0.5em rgba(156, 156, 156, 0.50), -2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), -3em 0 0 -0.5em rgba(156, 156, 156, 0.50), -2em -2em 0 0 rgba(156, 156, 156, 0.50);
   }
   12.5% {
-    box-shadow: 0em -3em 0em 0em rgba(156, 156, 156, 0.50), 2em -2em 0 0.2em rgba(156, 156, 156, 0.50), 3em 0em 0 0em rgba(156, 156, 156, 0.50), 2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), 0em 3em 0 -0.5em rgba(156, 156, 156, 0.50), -2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), -3em 0em 0 -0.5em rgba(156, 156, 156, 0.50), -2em -2em 0 -0.5em rgba(156, 156, 156, 0.50);
+    box-shadow: 0 -3em 0 0 rgba(156, 156, 156, 0.50), 2em -2em 0 0.2em rgba(156, 156, 156, 0.50), 3em 0 0 0 rgba(156, 156, 156, 0.50), 2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), 0 3em 0 -0.5em rgba(156, 156, 156, 0.50), -2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), -3em 0 0 -0.5em rgba(156, 156, 156, 0.50), -2em -2em 0 -0.5em rgba(156, 156, 156, 0.50);
   }
   25% {
-    box-shadow: 0em -3em 0em -0.5em rgba(156, 156, 156, 0.50), 2em -2em 0 0em rgba(156, 156, 156, 0.50), 3em 0em 0 0.2em rgba(156, 156, 156, 0.50), 2em 2em 0 0em rgba(156, 156, 156, 0.50), 0em 3em 0 -0.5em rgba(156, 156, 156, 0.50), -2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), -3em 0em 0 -0.5em rgba(156, 156, 156, 0.50), -2em -2em 0 -0.5em rgba(156, 156, 156, 0.50);
+    box-shadow: 0 -3em 0 -0.5em rgba(156, 156, 156, 0.50), 2em -2em 0 0 rgba(156, 156, 156, 0.50), 3em 0 0 0.2em rgba(156, 156, 156, 0.50), 2em 2em 0 0 rgba(156, 156, 156, 0.50), 0 3em 0 -0.5em rgba(156, 156, 156, 0.50), -2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), -3em 0 0 -0.5em rgba(156, 156, 156, 0.50), -2em -2em 0 -0.5em rgba(156, 156, 156, 0.50);
   }
   37.5% {
-    box-shadow: 0em -3em 0em -0.5em rgba(156, 156, 156, 0.50), 2em -2em 0 -0.5em rgba(156, 156, 156, 0.50), 3em 0em 0 0em rgba(156, 156, 156, 0.50), 2em 2em 0 0.2em rgba(156, 156, 156, 0.50), 0em 3em 0 0em rgba(156, 156, 156, 0.50), -2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), -3em 0em 0 -0.5em rgba(156, 156, 156, 0.50), -2em -2em 0 -0.5em rgba(156, 156, 156, 0.50);
+    box-shadow: 0 -3em 0 -0.5em rgba(156, 156, 156, 0.50), 2em -2em 0 -0.5em rgba(156, 156, 156, 0.50), 3em 0 0 0 rgba(156, 156, 156, 0.50), 2em 2em 0 0.2em rgba(156, 156, 156, 0.50), 0 3em 0 0 rgba(156, 156, 156, 0.50), -2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), -3em 0 0 -0.5em rgba(156, 156, 156, 0.50), -2em -2em 0 -0.5em rgba(156, 156, 156, 0.50);
   }
   50% {
-    box-shadow: 0em -3em 0em -0.5em rgba(156, 156, 156, 0.50), 2em -2em 0 -0.5em rgba(156, 156, 156, 0.50), 3em 0em 0 -0.5em rgba(156, 156, 156, 0.50), 2em 2em 0 0em rgba(156, 156, 156, 0.50), 0em 3em 0 0.2em rgba(156, 156, 156, 0.50), -2em 2em 0 0em rgba(156, 156, 156, 0.50), -3em 0em 0 -0.5em rgba(156, 156, 156, 0.50), -2em -2em 0 -0.5em rgba(156, 156, 156, 0.50);
+    box-shadow: 0 -3em 0 -0.5em rgba(156, 156, 156, 0.50), 2em -2em 0 -0.5em rgba(156, 156, 156, 0.50), 3em 0 0 -0.5em rgba(156, 156, 156, 0.50), 2em 2em 0 0 rgba(156, 156, 156, 0.50), 0 3em 0 0.2em rgba(156, 156, 156, 0.50), -2em 2em 0 0 rgba(156, 156, 156, 0.50), -3em 0 0 -0.5em rgba(156, 156, 156, 0.50), -2em -2em 0 -0.5em rgba(156, 156, 156, 0.50);
   }
   62.5% {
-    box-shadow: 0em -3em 0em -0.5em rgba(156, 156, 156, 0.50), 2em -2em 0 -0.5em rgba(156, 156, 156, 0.50), 3em 0em 0 -0.5em rgba(156, 156, 156, 0.50), 2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), 0em 3em 0 0em rgba(156, 156, 156, 0.50), -2em 2em 0 0.2em rgba(156, 156, 156, 0.50), -3em 0em 0 0em rgba(156, 156, 156, 0.50), -2em -2em 0 -0.5em rgba(156, 156, 156, 0.50);
+    box-shadow: 0 -3em 0 -0.5em rgba(156, 156, 156, 0.50), 2em -2em 0 -0.5em rgba(156, 156, 156, 0.50), 3em 0 0 -0.5em rgba(156, 156, 156, 0.50), 2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), 0 3em 0 0 rgba(156, 156, 156, 0.50), -2em 2em 0 0.2em rgba(156, 156, 156, 0.50), -3em 0 0 0 rgba(156, 156, 156, 0.50), -2em -2em 0 -0.5em rgba(156, 156, 156, 0.50);
   }
   75% {
-    box-shadow: 0em -3em 0em -0.5em rgba(156, 156, 156, 0.50), 2em -2em 0 -0.5em rgba(156, 156, 156, 0.50), 3em 0em 0 -0.5em rgba(156, 156, 156, 0.50), 2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), 0em 3em 0 -0.5em rgba(156, 156, 156, 0.50), -2em 2em 0 0em rgba(156, 156, 156, 0.50), -3em 0em 0 0.2em rgba(156, 156, 156, 0.50), -2em -2em 0 0em rgba(156, 156, 156, 0.50);
+    box-shadow: 0 -3em 0 -0.5em rgba(156, 156, 156, 0.50), 2em -2em 0 -0.5em rgba(156, 156, 156, 0.50), 3em 0 0 -0.5em rgba(156, 156, 156, 0.50), 2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), 0 3em 0 -0.5em rgba(156, 156, 156, 0.50), -2em 2em 0 0 rgba(156, 156, 156, 0.50), -3em 0 0 0.2em rgba(156, 156, 156, 0.50), -2em -2em 0 0 rgba(156, 156, 156, 0.50);
   }
   87.5% {
-    box-shadow: 0em -3em 0em 0em rgba(156, 156, 156, 0.50), 2em -2em 0 -0.5em rgba(156, 156, 156, 0.50), 3em 0em 0 -0.5em rgba(156, 156, 156, 0.50), 2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), 0em 3em 0 -0.5em rgba(156, 156, 156, 0.50), -2em 2em 0 0em rgba(156, 156, 156, 0.50), -3em 0em 0 0em rgba(156, 156, 156, 0.50), -2em -2em 0 0.2em rgba(156, 156, 156, 0.50);
+    box-shadow: 0 -3em 0 0 rgba(156, 156, 156, 0.50), 2em -2em 0 -0.5em rgba(156, 156, 156, 0.50), 3em 0 0 -0.5em rgba(156, 156, 156, 0.50), 2em 2em 0 -0.5em rgba(156, 156, 156, 0.50), 0 3em 0 -0.5em rgba(156, 156, 156, 0.50), -2em 2em 0 0 rgba(156, 156, 156, 0.50), -3em 0 0 0 rgba(156, 156, 156, 0.50), -2em -2em 0 0.2em rgba(156, 156, 156, 0.50);
   }
  }
 
@@ -228,7 +228,7 @@ table th.tablesorter-header {
 		margin-top: 5px!important;
 		}
 	.navbar .btn {
-		margin-top: 0px !important;
+		margin-top: 0 !important;
 	}
 }
 
