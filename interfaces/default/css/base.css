@@ -182,7 +182,7 @@ table th.tablesorter-header {
     width: 100%;
     overflow-y: hidden;
     -ms-overflow-style: -ms-autohiding-scrollbar;
-    //border: 1px solid;
+    /* border: 1px solid; */
   }
   .mofa > .table {
     margin-bottom: 0;
