@@ -1,0 +1,19 @@
+#sabnzbd-stats .progress,
+#sabnzbd-stats h6 {
+  margin-bottom: 0;
+}
+
+#sabnzbd-stats .progress .bar {
+  overflow: hidden;
+}
+
+/* sabnzbd table progress bar */
+tr > td:nth-child(3) > div {
+	margin-bottom: 0;
+
+}
+
+/* sabnzbd table dropdown */
+#active_table_body > tr > td:nth-child(2) > select {
+	margin-bottom: 0;
+}

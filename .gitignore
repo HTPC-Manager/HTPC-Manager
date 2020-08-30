@@ -1,0 +1,33 @@
+# Ignore folder containing user data #
+userdata/
+
+# Ignore virtual environment folder
+venv/
+
+# Ignore Versions file. If present, contains github commit hash for current version #
+VERSION.txt
+
+# Ignore folder with jekyll compiled content for gh-pages #
+_site/
+
+# Ignore system files and folders aswell as some common files #
+.DS_Store*
+*.py[co]
+.project
+.pydevproject
+.settings/
+ehthumbs.db
+Icon?
+Thumbs.db
+.idea
+htpc_manager.log
+*.orig
+config.codekit
+.flux
+.python-version
+
+# Ignore themes from other projects
+
+# http://www.openflixr.com
+interfaces/default/css/themes/openflixr/
+

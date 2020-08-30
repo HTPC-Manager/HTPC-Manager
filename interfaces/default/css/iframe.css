@@ -1,0 +1,12 @@
+body, html {
+	overflow:hidden;
+}
+
+#webpage {
+width: 100%;
+border: none;
+margin: 0;
+position: absolute;
+left: 0;
+right: 0;
+}
