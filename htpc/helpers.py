@@ -64,7 +64,7 @@ def get_image(url, height=None, width=None, opacity=100, mode=None, auth=None, h
         os.makedirs(imgdir)
 
     # Create a hash of the path to use as filename
-    imghash = hashlib.md5(url).hexdigest()
+    imghash = hashlib.md5(url.encode('utf-8')).hexdigest()
 
     # Set filename and path
     image = os.path.join(imgdir, imghash)
