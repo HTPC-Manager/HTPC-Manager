@@ -1,36 +1,28 @@
 #qbt_rp_icon {
-  display:inline-block;
-	line-height:inherit;
+	display: inline-block;
+	line-height: inherit;
 }
 .ofa {
-	overflow:auto;
+	overflow: auto;
 }
 table {
 	margin-bottom: 10px !important;
 }
-
-/**
- * Progress bars with centered text
- */
+/* Progress bars with centered text */
 .progress {
-    position: relative;
-    margin-bottom: 0px;
+	position: relative;
+	margin-bottom: 0;
 }
-
 .bar {
-    z-index: 1;
-    position: absolute;
+	z-index: 1;
+	position: absolute;
 }
-
 .progress span {
-    position: absolute;
-    top: 0;
-    z-index: 2;
-    text-align: center;
-    width: 100%;
-    color: black;
+	position: absolute;
+	top: 0;
+	z-index: 2;
+	text-align: center;
+	width: 100%;
+	color: black;
 }
-/*
-end progress bar
-*/
-
+/* end progress bar */
