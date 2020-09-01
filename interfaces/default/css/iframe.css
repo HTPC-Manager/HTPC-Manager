@@ -1,12 +1,11 @@
 body, html {
-	overflow:hidden;
+	overflow: hidden;
 }
-
 #webpage {
-width: 100%;
-border: none;
-margin: 0px;
-position: absolute;
-left: 0px;
-right: 0px;
+	width: 100%;
+	border: none;
+	margin: 0;
+	position: absolute;
+	left: 0;
+	right: 0;
 }
