@@ -1,131 +1,126 @@
 a:Hover {
-    text-decoration: none;
+	text-decoration: none;
 }
 .thumbnails li {
-    position: relative;
+	position: relative;
 	float: left !important;
 }
 #movie-grid img.thumbnail,
 #show-grid img.thumbnail {
-    height: 150px;
-    width: 100px;
+	height: 150px;
+	width: 100px;
 }
 #episode-grid img.thumbnail {
-    position: relative;
-    height: 85px;
-    width: 150px;
+	position: relative;
+	height: 85px;
+	width: 150px;
 }
 #album-grid img.thumbnail,
 #artist-grid img.thumbnail {
-    height: 150px;
-    width: 150px;
+	height: 150px;
+	width: 150px;
 }
 #pvr-grid img.thumbnail {
-    height: 75px;
-    width: 75px;
+	height: 75px;
+	width: 75px;
 }
 .watched {
-    position: absolute;
-    top: 138px;
-    right: 5px;
-    width: 16px;
-    height: 16px;
+	position: absolute;
+	top: 138px;
+	right: 5px;
+	width: 16px;
+	height: 16px;
 }
 .watched_episode {
-    position: absolute;
-    top: 73px;
-    right: 5px;
-    width: 16px;
-    height: 16px;
+	position: absolute;
+	top: 73px;
+	right: 5px;
+	width: 16px;
+	height: 16px;
 }
 .grid-caption {
-    position: absolute;
-    bottom: 1px;
-    left: 1px;
-    background: rgba(0,0,0,0.75);
-    padding: 10px;
-    width: 130px;
-    height: 130px;
+	position: absolute;
+	bottom: 1px;
+	left: 1px;
+	background: rgba(0,0,0,0.75);
+	padding: 10px;
+	width: 130px;
+	height: 130px;
 }
 .grid-caption h6 {
-    color: #fff;
-    font-family: inherit;
-    margin: 0;
+	color: #fff;
+	font-family: inherit;
+	margin: 0;
 }
 .grid-caption h6.artist {
-    font-weight: normal;
+	font-weight: normal;
 }
 .grid-control {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
+	position: absolute;
+	bottom: 10px;
+	left: 10px;
 }
 .grid-control a:first-child {
-    margin-right: 35px;
+	margin-right: 35px;
 }
 h6.title {
-    text-align: center;
-    margin: 0;
-    padding-top: 4px;
+	text-align: center;
+	margin: 0;
+	padding-top: 4px;
 }
 #artist-grid tr td:first-child {
-    width: 35px;
+	width: 35px;
 }
 #artist-grid a.artist-link {
-    display: block;
+	display: block;
 }
 #artist-grid i,
 #playlist-table i {
-    margin: 0 5px 0 0;
+	margin: 0 5px 0 0;
 }
 #nowplaying #player-progressbar,
 #playlist tr td {
-    cursor: pointer;
+	cursor: pointer;
 }
 #nowplaying {
-    background-size: 100%;
-    background-position: 50% 20%;
-    background-repeat: no-repeat;
-    margin-bottom: 10px;
+	background-size: 100%;
+	background-position: 50% 20%;
+	background-repeat: no-repeat;
+	margin-bottom: 10px;
 }
 #playlist-table tr td:last-child {
-    width: 35px;
+	width: 35px;
 }
-
 .modal-fanart {
-    background: #fff top center no-repeat;
-    background-size: 100%;
+	background: #fff top center no-repeat;
+	background-size: 100%;
 }
 .modal .movie-poster {
-    height: 300px;
-    width: 200px;
+	height: 300px;
+	width: 200px;
 }
 .modal .modal-movieinfo {
-    margin-left: 230px;
+	margin-left: 230px;
 }
-
-
 .modal .modal-episodeinfo {
-    margin-left: 230px;
+	margin-left: 230px;
 }
-
 .modal .modal-youtube {
-    border: 0;
-    height: 375px;
+	border: 0;
+	height: 375px;
 	width: 100%;
 	overflow: hidden;
 }
-
 @media (max-width: 767px) {
-	.thumbnails>li{margin-left:4px}
+	.thumbnails > li {
+		margin-left: 4px
 	}
-
-
+}
 @media (max-width: 320px) {
 	.modal .movie-poster {
 		height: 151px !important;
 		width: 104px !important;
-        margin-right: 8px;
+		margin-right: 8px;
 	}
 	.modal-body {
 		max-height: 280px;
@@ -134,32 +129,30 @@ h6.title {
 		max-height: 200px;
 	}
 	.thumbnails>li {
-		padding: 0px;
+		padding: 0;
 		margin-left: 12px;
 	}
-    .thumbnail {
-        margin:15px;
-    }
-
+	.thumbnail {
+		margin:15px;
+	}
 	.modal .thumbnail {
-        margin: 0px 8px 0px 0px;
+		margin: 0 8px 0 0;
 	}
 	.modal .modal-movieinfo {
-		margin-left: 0px;
+		margin-left: 0;
 	}
-    #episode-grid.thumbnails>li {
-        padding: 0px;
-        margin-left: 63px !important;
-
-    }
-    .modal .modal-episodeinfo {
-    margin-left: 0px;
-}
-    .modal .episode-poster {
-        height: 100px !important;
-        width: 150px !important;
-    }
-    #episode-grid > li  .thumbnail {
-        margin:0px;
-    }
+	#episode-grid.thumbnails>li {
+		padding: 0;
+		margin-left: 63px !important;
+	}
+	.modal .modal-episodeinfo {
+		margin-left: 0;
+	}
+	.modal .episode-poster {
+		height: 100px !important;
+		width: 150px !important;
+	}
+	#episode-grid > li .thumbnail {
+		margin: 0;
+	}
 }
