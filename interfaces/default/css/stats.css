@@ -1,13 +1,13 @@
 h1.page-header.page-title {
 	margin: -20px -20px 5px;
 }
-.table.nwtable td{
+.table.nwtable td {
 	padding: 0 !important;
 	border-top: 0 none #ddd !important;
 	text-align: center;
 }
 .disktable {
-	margin: 0.3% 0 0 0 !important;
+	margin: 0.3% 0 0 !important;
 }
 .table.nwtable {
 	margin-bottom: 0 !important;
@@ -22,7 +22,7 @@ table.networktable {
 	table-layout: fixed;
 	word-wrap: break-word !important;
 }
-.nwtable tr td{
+.nwtable tr td {
 	font-weight: 200;
 }
 /* First td should not have the smaller font */
@@ -34,7 +34,7 @@ table.networktable {
 	margin-bottom: 0;
 }
 #statscmd {
-	margin-top:10px;
+	margin-top: 10px;
 }
 .alert.helper-block {
 	margin-bottom: 0 !important;
