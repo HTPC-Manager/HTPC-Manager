@@ -2,58 +2,59 @@ h1.page-header.page-title {
 	margin: -20px -20px 5px;
 }
 .table.nwtable td{
-	padding:0px !important;
-	border-top: 0px none #ddd !important;
+	padding: 0 !important;
+	border-top: 0 none #ddd !important;
 	text-align: center;
 }
-
 .disktable {
 	margin: 0.3% 0 0 0 !important;
 }
-
 .table.nwtable {
-	margin-bottom:0px !important;
+	margin-bottom: 0 !important;
 }
-
 td.tlip {
 	font-size: 13px !important;
 }
-
 td.txip {
 	font-size: 13px !important;
 }
-
 table.networktable {
 	table-layout: fixed;
 	word-wrap: break-word !important;
 }
-
 .nwtable tr td{
 	font-weight: 200;
 }
 /* First td should not have the smaller font */
-.nwtable tr td:first-child{
+.nwtable tr td:first-child {
 	text-align: center;
 	font-weight: bold;
 }
-
-
 #disklist > tr > td.span3.stats_disk_progress > div {
-	margin-bottom: 0px;
+	margin-bottom: 0;
 }
-
 #statscmd {
 	margin-top:10px;
 }
-
-.alert.helper-block{
-	margin-bottom: 0px !important;
+.alert.helper-block {
+	margin-bottom: 0 !important;
 }
-
-
-.treegrid-indent {width:16px; height: 16px; display: inline-block; position: relative;}
-
-.treegrid-expander {width:16px; height: 16px; display: inline-block; position: relative; cursor: pointer;}
-
-.treegrid-expander-expanded{background-image: url(../img/collapse.png); }
-.treegrid-expander-collapsed{background-image: url(../img/expand.png);}
+.treegrid-indent {
+	width: 16px;
+	height: 16px;
+	display: inline-block;
+	position: relative;
+}
+.treegrid-expander {
+	width: 16px;
+	height: 16px;
+	display: inline-block;
+	position: relative;
+	cursor: pointer;
+}
+.treegrid-expander-expanded {
+	background-image: url(../img/collapse.png);
+}
+.treegrid-expander-collapsed {
+	background-image: url(../img/expand.png);
+}
