@@ -1,0 +1,77 @@
+.thumbnails li {
+    position: relative;
+	width: auto;
+	height: 175px;
+	text-align: center;
+    float: left;
+}
+
+#wanted-grid img.thumbnail,
+#result-grid img.thumbnail {
+    height: 150px;
+    width: 100px;
+}
+
+#wanted-grid
+#wanted-grid #result-grid h6.movie-title {
+    color: #555555;
+    text-align: center;
+    margin: 0;
+    padding-top: 4px;
+}
+#wanted-grid a:Hover,
+#result-grid a:Hover {
+    text-decoration: none;
+}
+.status {
+    position: absolute;
+    top: 138px;
+    right: 5px;
+    width: 16px;
+    height: 16px;
+}
+.modal-fanart {
+    background: #fff top center no-repeat;
+    background-size: 100%;
+}
+.modal-body td i {
+    margin-right: 5px;
+}
+.modal-body .ignore {
+    text-decoration: line-through;
+}
+.modal img.thumbnail {
+    height: 231px;
+    width: 154px;
+}
+.modal .modal-movieinfo {
+    margin-left: 180px;
+}
+.modal .modal-movieinfo select {
+    margin-top: 10px;
+}
+
+@media (max-width: 767px) {
+.thumbnails>li{margin-left:4px}
+}
+
+@media (max-width: 320px) {
+	.modal .movie-poster {
+		height: 207px !important;
+		width: 144px !important;
+	}
+	.modal-body {
+		max-height: 280px;
+	}
+	.thumbnails>li {
+		padding: 0px;
+		margin-left: 17px !important;
+	}
+	.thumbnail {
+		padding: 6px;
+        margin-right: 5px;
+	}
+	.modal .modal-movieinfo {
+		margin-left: 0px;
+	}
+}

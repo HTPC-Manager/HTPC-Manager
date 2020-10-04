@@ -109,6 +109,8 @@ def load_modules():
     htpc.ROOT.plexpy = Plexpy()
     from modules.ombi import Ombi
     htpc.ROOT.ombi = Ombi()
+    from modules.watcher3 import Watcher3
+    htpc.ROOT.watcher3 = Watcher3()
 
 def init_sched():
     from apscheduler.schedulers.background import BackgroundScheduler
