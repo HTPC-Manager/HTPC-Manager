@@ -234,9 +234,14 @@ class Watcher3(object):
     @cherrypy.expose()
     @require(member_of(htpc.role_user))
     @cherrypy.tools.json_out()
-    def EditMovie(self, id, profile, title):
+    def EditMovie(self, imdbid, profile=None, title=None):
         self.logger.debug('Editing movie')
-        return self.fetch('movie.edit/?id=' + id + '&profile_id=' + profile + '&default_title=' + title)
+        params = {'imdbid': imdbid}
+        if profile:
+            params['quality'] = profile
+        if title:
+            params['title'] = title
+        return self.fetch('update_movie_options', **params)
 
     @cherrypy.expose()
     @require(member_of(htpc.role_user))

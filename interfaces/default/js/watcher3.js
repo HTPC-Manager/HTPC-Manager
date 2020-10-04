@@ -156,15 +156,12 @@ function addMovie(movieid, profile, title, cat){
     });
 }
 
-function editMovie(id, profile, title){ // TODO add api to watcher
-    return; // TODO edit movie in watcher
-    $.getJSON(WEBDIR + "watcher3/EditMovie", {
-        imdbid: id,
-        profile: profile,
-        title: encodeURIComponent(title)
-    }, function(result){
-        if(result.success){
-            notify("Watcher", "Profile changed", "success");
+function editMovie(id, key, value){
+    params = {imdbid: id};
+    params[key] = encodeURIComponent(value);
+    $.getJSON(WEBDIR + "watcher3/EditMovie", params, function(result){
+        if(result.response){
+            notify("Watcher", key + " changed", "success");
         } else {
             notify("Watcher", "An error occured.", "error");
         }
@@ -306,12 +303,12 @@ function showMovie(movie, was_search, info){
     var title = movie.title;
     if(year) title += " (" + year + ")";
     profiles.change(function(){
-        editMovie(movie.imdbid, profiles.val(), titles.val());
+        editMovie(movie.imdbid, 'profile', profiles.val());
     }).val(movie.profile_id);
     titles.change(function(){
-        editMovie(movie.imdbid, profiles.val(), titles.val());
+        editMovie(movie.imdbid, 'title', titles.val());
     });
-
+    // TODO add option to change language and category
 
     // If showmovie is called from a search
     if(was_search){
