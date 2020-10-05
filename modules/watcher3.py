@@ -265,14 +265,14 @@ class Watcher3(object):
     @cherrypy.tools.json_out()
     def GetReleases(self, id=''):
         self.logger.debug('Downloading movie')
-        return self.fetch('media.get/?id=' + id)
+        return self.fetch('search_results', imdbid = id)
 
     @cherrypy.expose()
     @require()
     @cherrypy.tools.json_out()
-    def DownloadRelease(self, id=''):
+    def DownloadRelease(self, id='', kind=''):
         self.logger.debug('Downloading movie')
-        return self.fetch('release.manual_download/?id=' + id)
+        return self.fetch('manual_download', guid = id, kind = kind)
 
     @cherrypy.expose()
     @require(member_of(htpc.role_user))

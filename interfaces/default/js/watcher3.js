@@ -365,56 +365,6 @@ function showMovie(movie, was_search, info){
         modalInfo.append(cpcat);
     }
 
-    if(movie.releases && movie.releases.length > 0){ // TODO get torrents from watcher
-        var strTable = $("<table>").addClass("table table-striped table-hover").append(
-            $("<tr>").append("<th>Action</th>").append("<th>Name</th>").append("<th>Age</th>").append("<th>Score</th>").append("<th>Size</th>")
-        );
-
-        //Loop all with movies with releases. Dont add button if its done.
-        $.each(movie.releases, function(nIndex, pRelease){
-            if(rr.status !== "done"){
-                $.extend(modalButtons, {
-                    "Releases": function(){
-                        $(".modal-body").html(strTable);
-                    }
-                });
-            }
-            if(pRelease.info === undefined || pRelease.info.id === undefined){
-                return;
-            }
-
-            strTable.append(
-                $("<tr>").append(
-                    $("<td>").append(
-                        $("<a>").attr("href", "#").append(
-                            $("<i>").attr("title", "Download").addClass("fa fa-download")
-                        ).click(function(pEvent){
-                            pEvent.preventDefault();
-                            hideModal();
-                            $.getJSON("DownloadRelease/?id=" + pRelease._id);
-                        }),
-                        $("<a>").attr("href", "#").append(
-                            $("<i>").attr("title", "Ignore").addClass("fa fa-times-circle")
-                        ).click(function(pEvent){
-                            pEvent.preventDefault();
-                            $(this).closest("tr").toggleClass("ignore");
-                            $.getJSON("IgnoreRelease/?id=" + pRelease._id);
-                        })
-                    ),
-                    $("<td>").append(
-                        $("<a>").attr("href", "#").text(pRelease.info.name).click(function(pEvent){
-                            pEvent.preventDefault();
-                            window.open(pRelease.info.detail_url);
-                        })
-                    ),
-                    $("<td>").append(pRelease.info.age),
-                    $("<td>").append(pRelease.info.score),
-                    $("<td>").html(bytesToSize(pRelease.info.size * 1000000))
-                ).toggleClass("ignore", pRelease.status_id === 3)
-            );
-        });
-    }
-
     if(info && info.backdrop_path){
         var url = "https://image.tmdb.org/t/p/original" + info.backdrop_path;
         var backdrop = WEBDIR + "watcher3/GetImage?w=675&h=400&o=10&url=" + encodeURIComponent(url);
@@ -423,11 +373,69 @@ function showMovie(movie, was_search, info){
         });
     }
 
-    var modalBody = $("<div>").append(modalImg, modalInfo);
-    showModal(title, modalBody, modalButtons);
-    // since ff and ie sucks balls
-    $("#profiles option")[0].selected = true;
-    Holder.run();
+    $.getJSON(WEBDIR + "watcher3/GetReleases", {id: movie.imdbid})
+        .done(function(data){
+            if (data.response){
+                var strTable = MovieReleases(data.results);
+                $.extend(modalButtons, {
+                    "Releases": function(){
+                        $(".modal-body").html(strTable);
+                    }
+                });
+            }
+        })
+        .complete(function(){
+            var modalBody = $("<div>").append(modalImg, modalInfo);
+            showModal(title, modalBody, modalButtons);
+            // since ff and ie sucks balls
+            $("#profiles option")[0].selected = true;
+            Holder.run();
+        });
+}
+
+function MovieReleases(releases) {
+    var strTable = $("<table>").addClass("table table-striped table-hover").append(
+        $("<tr>").append("<th>Action</th>").append("<th>Name</th>").append("<th>Indexer</th>").append("<th>Leechers/Seeders</th>").append("<th>Score</th>").append("<th>Size</th>")
+    );
+
+    //Loop all with movies with releases. Dont add button if its done or downloading.
+    $.each(releases, function(nIndex, pRelease){
+        //Don't display release if watcher3 rejected it
+        if (pRelease.reject_reason) return;
+        var action = $("<td>");
+        if (pRelease.status == "Available" || pRelease.status == "Bad") {
+	    action.append(
+	        $("<a>").attr("href", "#").append(
+                    $("<i>").attr("title", "Download").addClass("fa fa-download")
+                ).click(function(pEvent){
+                    pEvent.preventDefault();
+                    hideModal();
+                    $.getJSON("DownloadRelease", {id: pRelease.guid, kind: pRelease.type});
+                })
+	    );
+            if (pRelease.status == "Bad")
+                action.append($("<i>").attr("title", "Bad").addClass("fa fa-ban"));
+	} else {
+            action.append($("<i>").attr("title", pRelease.status).addClass("fa fa-" + (pRelease.status == "Snatched" ? "arrow-circle-down" : "check-circle")));
+	}
+        strTable.append(
+            $("<tr>").append(
+                action,
+                $("<td>").append(
+                    $("<a>").attr("href", "#").text(pRelease.title).click(function(pEvent){
+                        pEvent.preventDefault();
+                        window.open(pRelease.info_link);
+                    })
+                ),
+                $("<td>").append(pRelease.indexer),
+                $("<td>").append(pRelease.leechers + '/' + pRelease.seeders),
+                $("<td>").append(pRelease.score),
+                $("<td>").html(bytesToSize(pRelease.size))
+            )
+        );
+    });
+
+    return strTable;
 }
 
 function Postprocess(){

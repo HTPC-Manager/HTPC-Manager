@@ -37,9 +37,6 @@
 .modal-body td i {
     margin-right: 5px;
 }
-.modal-body .ignore {
-    text-decoration: line-through;
-}
 .modal img.thumbnail {
     height: 231px;
     width: 154px;
