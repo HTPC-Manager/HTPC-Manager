@@ -3,7 +3,7 @@ $.ajaxSetup({
 });
 var profiles = $("<select id=\"profiles\">");
 var cpcat = "";
-var themoviedb_url = "http://api.themoviedb.org/3/movie/{id}?api_key=2931bba1620c3c14c612ab820b828365";
+var themoviedb_url = "//api.themoviedb.org/3/movie/{id}?api_key=2931bba1620c3c14c612ab820b828365";
 $(document).ready(function(){
     $("#searchform").submit(function(e){
         e.preventDefault();
