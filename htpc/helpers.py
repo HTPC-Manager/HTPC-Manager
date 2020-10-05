@@ -235,11 +235,14 @@ def download_image(url, dest, auth=None, headers=None):
             request.add_header('Cache-Control', 'private, max-age=0, no-cache, must-revalidate')
             request.add_header('Pragma', 'no-cache')
 
-        resp = urlopen(request).read()
-        if resp:
-
+        resp = urlopen(request)
+        body = resp.read()
+        if resp.info().get_content_type() == 'application/json':
+            logger.error('Failed to download %s to %s: %s' % (url, dest, body))
+            return
+        elif body:
             with open(dest, 'wb') as local_file:
-                local_file.write(urlopen(request).read())
+                local_file.write(body)
         else:
             return
 
