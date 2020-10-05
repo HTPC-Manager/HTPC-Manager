@@ -288,13 +288,15 @@ function showMovie(movie, was_search, info){
     }
 
     var titles = $("<select>").attr("id", "titles");
-    // TODO add support to watcher to select title
     if(was_search){
         $.each([movie.title], function(i, item){
             titles.append($("<option>").text(item).val(item).prop("selected", item.default));
         });
     } else {
-        $.each([movie.title], function(i, item){
+        var title_list = [movie.title];
+        if(movie.alternative_titles)
+            title_list = title_list.concat(movie.alternative_titles.split(','));
+        $.each(title_list, function(i, item){
             titles.append($("<option>").text(item).val(item));
         });
     }
