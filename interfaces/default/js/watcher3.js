@@ -207,7 +207,7 @@ function showSearchResults(movies, grid){
         if(!finished){
             link.attr("href", "#").click(function(e){
                 e.preventDefault();
-                showMovie(movie, cpcat);
+                showMovie(movie, true);
             });
         }
         var src = "holder.js/100x150/text:No artwork";
@@ -317,6 +317,11 @@ function showMovie(movie, was_search, info){
     titles.change(function(){
         editMovie(movie, 'title', titles.val());
     });
+    if (cpcat){
+        cpcat.change(function(){
+            editMovie(movie, 'category', cpcat.val());
+        });
+    }
     // TODO add option to change language and category
 
     // If showmovie is called from a search
@@ -369,8 +374,7 @@ function showMovie(movie, was_search, info){
 
     modalInfo.append(titles, profiles);
 
-    // Adds the category if showmovie was run from search
-    if(was_search){
+    if (cpcat) {
         modalInfo.append(cpcat);
     }
 
