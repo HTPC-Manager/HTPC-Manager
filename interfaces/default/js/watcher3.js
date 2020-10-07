@@ -170,20 +170,26 @@ function editMovie(movie, key, value){
     $.getJSON(WEBDIR + "watcher3/EditMovie", params, function(result){
         if(result.response){
             notify("Watcher", key + " changed", "success");
-            movie[key] = value;
+            $.extend(movie, result.movie);
             switch (key) {
                 case 'title':
-                    $('#' + movie.imdbid + ' .movie-title').html(shortenText(value, 16));
-                    $('.modal-header .modal-h3').html(value + (movie.year ? ' (' + movie.year + ')' : ''));
+                    changeTitle(movie.imdbid, value, movie.year);
                     break;
                 case 'download_language':
-                    // TODO update modal header, titles select, plot, title in grid
+                    changeTitle(movie.imdbid, movie.title, movie.year);
+                    buildTitlesSelect($('#titles').html(''), movie);
+                    $('#plot').html(movie.plot);
                     break;
             }
         } else {
             notify("Watcher", "An error occured.", "error");
         }
     });
+}
+
+function changeTitle(id, title, year) {
+    $('#' + id + ' .movie-title').html(shortenText(title, 16));
+    $('.modal-header .modal-h3').html(title + (year ? ' (' + year + ')' : ''));
 }
 
 function deleteMovie(id, name, delete_file){
@@ -283,7 +289,7 @@ function showMovie(movie, was_search, info){
     if(info && info.runtime){
         modalInfo.append($("<p>").html("<b>Runtime:</b> " + parseSec(info.runtime)));
     }
-    modalInfo.append($("<p>").html("<b>Plot:</b> " + plot));
+    modalInfo.append($("<p>").html("<b>Plot:</b> <div id=\"plot\">" + plot + "</div>"));
     if(info){
         if(info.directors){
             modalInfo.append($("<p>").html("<b>Director:</b> " + info.directors));
@@ -311,15 +317,7 @@ function showMovie(movie, was_search, info){
             titles.append($("<option>").text(item).val(item).prop("selected", item.default));
         });
     } else {
-        var title_list = [movie.title];
-        if(movie.alternative_titles) {
-            movie.alternative_titles.split(',').forEach(function(title){
-                if(title_list.indexOf(title) === -1) title_list.push(title);
-            });
-        }
-        $.each(title_list, function(i, item){
-            titles.append($("<option>").text(item).val(item));
-        });
+        buildTitlesSelect(titles, movie);
     }
 
     profiles.unbind();
@@ -431,6 +429,18 @@ function showMovie(movie, was_search, info){
         })
         .complete(showMovieModal);
     }
+}
+
+function buildTitlesSelect(element, movie) {
+    var title_list = [movie.title];
+    if(movie.alternative_titles) {
+        $.each(movie.alternative_titles.split(','), function(i, title){
+            if(title_list.indexOf(title) === -1) title_list.push(title);
+        });
+    }
+    $.each(title_list, function(i, item){
+        element.append($("<option>").text(item).val(item));
+    });
 }
 
 function MovieReleases(releases) {
