@@ -319,8 +319,8 @@ function showMovie(movie, was_search, info){
     });
     if (cpcat){
         cpcat.change(function(){
-            editMovie(movie, 'category', cpcat.val());
-        }).val(movie.category);
+            editMovie(movie, 'category', $(this).val());
+        }).val(movie.category || 'Default');
     }
     // TODO add option to change language and category
 
@@ -386,9 +386,18 @@ function showMovie(movie, was_search, info){
         });
     }
 
-    $.getJSON(WEBDIR + "watcher3/GetReleases", {id: movie.imdbid})
+    var showMovieModal = function(){
+        var modalBody = $("<div>").append(modalImg, modalInfo);
+        showModal(title, modalBody, modalButtons);
+        // since ff and ie sucks balls
+        if (!was_search) $("#profiles").val(movie.quality);
+        Holder.run();
+    };
+    if (was_search) showMovieModal();
+    else {
+        $.getJSON(WEBDIR + "watcher3/GetReleases", {id: movie.imdbid})
         .done(function(data){
-            if (data.response){
+            if(data.response){
                 var strTable = MovieReleases(data.results);
                 $.extend(modalButtons, {
                     "Releases": function(){
@@ -397,13 +406,8 @@ function showMovie(movie, was_search, info){
                 });
             }
         })
-        .complete(function(){
-            var modalBody = $("<div>").append(modalImg, modalInfo);
-            showModal(title, modalBody, modalButtons);
-            // since ff and ie sucks balls
-            $("#profiles").val(movie.quality);
-            Holder.run();
-        });
+        .complete(showMovieModal);
+    }
 }
 
 function MovieReleases(releases) {
