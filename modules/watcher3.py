@@ -234,7 +234,7 @@ class Watcher3(object):
     @cherrypy.expose()
     @require(member_of(htpc.role_user))
     @cherrypy.tools.json_out()
-    def EditMovie(self, imdbid, quality=None, title=None, category=None):
+    def EditMovie(self, imdbid, quality=None, title=None, category=None, download_language=None):
         self.logger.debug('Editing movie')
         params = {'imdbid': imdbid}
         if quality:
@@ -243,6 +243,8 @@ class Watcher3(object):
             params['title'] = title
         if category:
             params['category'] = category
+        if download_language:
+            params['language'] = '' if download_language == 'Default' else download_language
         return self.fetch('update_movie_options', **params)
 
     @cherrypy.expose()
@@ -304,6 +306,17 @@ class Watcher3(object):
         response = self.fetch('getconfig')
         if response and response.get('config'):
             return ['Default'] + response.get('config').get('Categories').keys()
+        else:
+            return ['Default']
+
+    @cherrypy.expose()
+    @require()
+    @cherrypy.tools.json_out()
+    def GetLanguages(self):
+        self.logger.debug('Feching languages')
+        response = self.fetch('getconfig')
+        if response and response.get('config'):
+            return ['Default'] + response.get('config').get('Languages', {}).keys()
         else:
             return ['Default']
 

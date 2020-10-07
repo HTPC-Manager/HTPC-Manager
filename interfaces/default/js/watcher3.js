@@ -2,7 +2,7 @@ $.ajaxSetup({
     timeout: 6000000
 });
 var profiles = $("<select id=\"profiles\">");
-var cpcat = "";
+var cpcat = "", cplang = "";
 var themoviedb_url = "//api.themoviedb.org/3/movie/{id}?api_key=2931bba1620c3c14c612ab820b828365";
 $(document).ready(function(){
     $("#searchform").submit(function(e){
@@ -48,6 +48,14 @@ $(document).ready(function(){
         cpcat = $("<select id=\"category_id\">");
         $.each(data, function(i, item){
             cpcat.append($("<option>").val(item).text(item));
+        });
+    });
+
+    $.get(WEBDIR + "watcher3/GetLanguages", function(data){
+        if(data.length <= 0) return;
+        cplang = $("<select id=\"language_id\">");
+        $.each(data, function(i, item){
+            cplang.append($("<option>").val(item).text(item));
         });
     });
 
@@ -163,8 +171,14 @@ function editMovie(movie, key, value){
         if(result.response){
             notify("Watcher", key + " changed", "success");
             movie[key] = value;
-            if (key === 'title') {
-                $('#' + movie.imdbid + ' .movie-title').html(shortenText(value, 16));
+            switch (key) {
+                case 'title':
+                    $('#' + movie.imdbid + ' .movie-title').html(shortenText(value, 16));
+                    $('.modal-header .modal-h3').html(value + (movie.year ? ' (' + movie.year + ')' : ''));
+                    break;
+                case 'download_language':
+                    // TODO update modal header, titles select, plot, title in grid
+                    break;
             }
         } else {
             notify("Watcher", "An error occured.", "error");
@@ -322,7 +336,12 @@ function showMovie(movie, was_search, info){
             editMovie(movie, 'category', $(this).val());
         }).val(movie.category || 'Default');
     }
-    // TODO add option to change language and category
+    if (cplang){
+        cplang.change(function(){
+            editMovie(movie, 'download_language', $(this).val());
+        })
+        cplang.val(movie.download_language || 'Default');
+    }
 
     // If showmovie is called from a search
     if(was_search){
@@ -376,6 +395,10 @@ function showMovie(movie, was_search, info){
 
     if (cpcat) {
         modalInfo.append(cpcat);
+    }
+    // watcher doesn't support setting language for new movies yet
+    if(!was_search && cplang) {
+        modalInfo.append(cplang);
     }
 
     if(info && info.backdrop_path){
