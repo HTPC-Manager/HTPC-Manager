@@ -237,7 +237,7 @@ def download_image(url, dest, auth=None, headers=None):
 
         resp = urlopen(request)
         body = resp.read()
-        if resp.info().get_content_type() == 'application/json':
+        if resp.info().type == 'application/json':
             logger.error('Failed to download %s to %s: %s' % (url, dest, body))
             return
         elif body:
