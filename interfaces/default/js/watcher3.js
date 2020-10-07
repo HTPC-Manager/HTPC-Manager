@@ -169,7 +169,7 @@ function editMovie(movie, key, value){
     params[key] = encodeURIComponent(value);
     $.getJSON(WEBDIR + "watcher3/EditMovie", params, function(result){
         if(result.response){
-            notify("Watcher", key + " changed", "success");
+            var key_name = key;
             $.extend(movie, result.movie);
             switch (key) {
                 case 'title':
@@ -179,8 +179,10 @@ function editMovie(movie, key, value){
                     changeTitle(movie.imdbid, movie.title, movie.year);
                     buildTitlesSelect($('#titles').html(''), movie);
                     $('#plot').html(movie.plot);
+                    key_name = 'language';
                     break;
             }
+            notify("Watcher", key_name + " changed", "success");
         } else {
             notify("Watcher", "An error occured.", "error");
         }
