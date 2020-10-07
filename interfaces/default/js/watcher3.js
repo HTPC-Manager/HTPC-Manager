@@ -312,15 +312,15 @@ function showMovie(movie, was_search, info){
     var title = movie.title;
     if(year) title += " (" + year + ")";
     profiles.change(function(){
-        editMovie(movie, 'profile', profiles.val());
-    }).val(movie.profile_id);
+        editMovie(movie, 'quality', $(this).val());
+    });
     titles.change(function(){
         editMovie(movie, 'title', titles.val());
     });
     if (cpcat){
         cpcat.change(function(){
             editMovie(movie, 'category', cpcat.val());
-        });
+        }).val(movie.category);
     }
     // TODO add option to change language and category
 
@@ -401,7 +401,7 @@ function showMovie(movie, was_search, info){
             var modalBody = $("<div>").append(modalImg, modalInfo);
             showModal(title, modalBody, modalButtons);
             // since ff and ie sucks balls
-            $("#profiles option")[0].selected = true;
+            $("#profiles").val(movie.quality);
             Holder.run();
         });
 }
