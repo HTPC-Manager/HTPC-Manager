@@ -156,12 +156,16 @@ function addMovie(movieid, profile, title, cat){
     });
 }
 
-function editMovie(id, key, value){
-    params = {imdbid: id};
+function editMovie(movie, key, value){
+    params = {imdbid: movie.imdbid};
     params[key] = encodeURIComponent(value);
     $.getJSON(WEBDIR + "watcher3/EditMovie", params, function(result){
         if(result.response){
             notify("Watcher", key + " changed", "success");
+            movie[key] = value;
+            if (key === 'title') {
+                $('#' + movie.imdbid + ' .movie-title').html(shortenText(value, 16));
+            }
         } else {
             notify("Watcher", "An error occured.", "error");
         }
@@ -294,8 +298,11 @@ function showMovie(movie, was_search, info){
         });
     } else {
         var title_list = [movie.title];
-        if(movie.alternative_titles)
-            title_list = title_list.concat(movie.alternative_titles.split(','));
+        if(movie.alternative_titles) {
+            movie.alternative_titles.split(',').forEach(function(title){
+                if(title_list.indexOf(title) === -1) title_list.push(title);
+            });
+        }
         $.each(title_list, function(i, item){
             titles.append($("<option>").text(item).val(item));
         });
@@ -305,10 +312,10 @@ function showMovie(movie, was_search, info){
     var title = movie.title;
     if(year) title += " (" + year + ")";
     profiles.change(function(){
-        editMovie(movie.imdbid, 'profile', profiles.val());
+        editMovie(movie, 'profile', profiles.val());
     }).val(movie.profile_id);
     titles.change(function(){
-        editMovie(movie.imdbid, 'title', titles.val());
+        editMovie(movie, 'title', titles.val());
     });
     // TODO add option to change language and category
 
@@ -415,11 +422,11 @@ function MovieReleases(releases) {
                     $.getJSON("DownloadRelease", {id: pRelease.guid, kind: pRelease.type});
                 })
 	    );
-            if (pRelease.status == "Bad")
-                action.append($("<i>").attr("title", "Bad").addClass("fa fa-ban"));
-	} else {
+        if (pRelease.status == "Bad")
+            action.append($("<i>").attr("title", "Bad").addClass("fa fa-ban"));
+        } else {
             action.append($("<i>").attr("title", pRelease.status).addClass("fa fa-" + (pRelease.status == "Snatched" ? "arrow-circle-down" : "check-circle")));
-	}
+        }
         strTable.append(
             $("<tr>").append(
                 action,
