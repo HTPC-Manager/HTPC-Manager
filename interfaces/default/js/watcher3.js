@@ -3,7 +3,7 @@ $.ajaxSetup({
 });
 var profiles = $("<select id=\"profiles\">");
 var cpcat = "", cplang = "";
-var themoviedb_url = "//api.themoviedb.org/3/movie/{id}?api_key=2931bba1620c3c14c612ab820b828365";
+var themoviedb_url = "//api.themoviedb.org/3/movie/{id}?api_key=2931bba1620c3c14c612ab820b828365&append_to_response=credits";
 $(document).ready(function(){
     $("#searchform").submit(function(e){
         e.preventDefault();
@@ -291,8 +291,10 @@ function showMovie(movie, was_search, info){
     }
     modalInfo.append($("<p>").html("<b>Plot:</b> <div id=\"plot\">" + plot + "</div>"));
     if(info){
-        if(info.directors){
-            modalInfo.append($("<p>").html("<b>Director:</b> " + info.directors));
+        if(info.credits && info.credits.crew){
+            var directors = [];
+            $.each(info.credits.crew, function(i, item) { if (item.job == 'Director') directors.push(item.name); });
+            if (directors) modalInfo.append($("<p>").html("<b>Director:</b> " + directors.join(', ')));
         }
         if(info.genres){
             modalInfo.append($("<p>").html("<b>Genre:</b> " + info.genres.map(function(i){
