@@ -26,5 +26,3 @@ psutil>=3.0.0
 pyopenssl
 # "Needed" for the vnstat module
 paramiko
-# "Needed" for SMART
-pySMART

@@ -1,0 +1,3 @@
+[submodule "submodules/pySMART"]
+	path = submodules/pySMART
+	url = https://github.com/truenas/py-SMART
