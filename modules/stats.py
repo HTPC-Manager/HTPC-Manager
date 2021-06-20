@@ -588,11 +588,9 @@ class Stats(object):
                         d[i] = {'assessment': hds.assessment,
                                 'firmware': hds.firmware,
                                 'interface': hds.interface,
-                                'is_ssd': hds.is_ssd,
                                 'model': hds.model,
                                 'name': hds.name,
                                 'serial': hds.serial,
-                                'supports_smart': hds.supports_smart,
                                 'capacity': hds.capacity,
                                 'temperature': temp,
                                 'attributes': a
