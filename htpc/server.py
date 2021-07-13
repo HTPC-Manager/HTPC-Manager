@@ -194,10 +194,13 @@ def start():
     print('*******************************************************************')
     cherrypy.config.update({
         'global': {
-            'engine.timeout_monitor.on': False, # Disable timeouts
-            'engine.autoreload.on' : False,     # Should reduce CPU usage
+            'engine.autoreload.on' : False, # Should reduce CPU usage
             'environment' : 'production',
         },
     })
+
+    # Disable timeout monitor on CherryPy < 12.0
+    if hasattr(cherrypy.engine, 'timeout_monitor'):
+        cherrypy.config.update({'global': {'engine.timeout_monitor.on': False}})
 
     cherrypy.quickstart(htpc.ROOT, htpc.WEBDIR[:-1], config=app_config)
