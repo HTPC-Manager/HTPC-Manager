@@ -15,30 +15,28 @@ from OpenSSL import crypto
 import time
 
 TYPE_RSA = crypto.TYPE_RSA
-TYPE_DSA = crypto.TYPE_DSA
-
 serial = int(time.time())
 
 
-def createKeyPair(type, bits):
+def createKeyPair(key_type, bits):
     """
     Create a public/private key pair.
 
-    Arguments: type - Key type, must be one of TYPE_RSA and TYPE_DSA
+    Arguments: key_type - Key type, must be TYPE_RSA as TYPE_DSA is discouraged
                bits - Number of bits to use in the key
     Returns:   The public/private key pair in a PKey object
     """
     pkey = crypto.PKey()
-    pkey.generate_key(type, bits)
+    pkey.generate_key(key_type, bits)
     return pkey
 
 
-def createCertRequest(pkey, digest="md5", **name):
+def createCertRequest(pkey, digest="sha256", **name):
     """
     Create a certificate request.
 
     Arguments: pkey   - The key to associate with the request
-               digest - Digestion method to use for signing, default is md5
+               digest - Digestion method to use for signing, default is sha256
                **name - The name of the subject of the request, possible
                         arguments are:
                           C     - Country name
@@ -61,7 +59,7 @@ def createCertRequest(pkey, digest="md5", **name):
     return req
 
 
-def createCertificate(req, (issuerCert, issuerKey), serial, (notBefore, notAfter), digest="md5"):
+def createCertificate(req, issuerCert, issuerKey, serial, notBefore, notAfter, digest="sha256"):
     """
     Generate a certificate given a certificate request.
 
@@ -73,7 +71,7 @@ def createCertificate(req, (issuerCert, issuerKey), serial, (notBefore, notAfter
                             starts being valid
                notAfter   - Timestamp (relative to now) when the certificate
                             stops being valid
-               digest     - Digest method to use for signing, default is md5
+               digest     - Digest method to use for signing, default is sha256
     Returns:   The signed certificate in an X509 object
     """
     cert = crypto.X509()
