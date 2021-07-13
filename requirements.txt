@@ -1,4 +1,4 @@
-# The following modules are mandatory
+# The following modules are mandatory:
 ssdp
 jaraco.collections
 six
@@ -11,20 +11,20 @@ requests-futures
 mako
 tzlocal
 xmltodict
-cherrypy < 9.0
+cherrypy<9.0
 jsonrpclib-pelix
 pytz
 pyasn1
 sqlobject
 
-# Hptc Manager will run fine fine without this ones. However if will miss some features
-# "Needed" for image resize etc
+# HTPC Manager runs without these, but misses some features:
+# Needed for image resize etc
 Pillow
-# "Needed" for stat module
+# Needed for stat module
 psutil>=3.0.0
-# "Needed for genereratin ssl cert key"
+# Needed for SSL cert and key generation
 pyopenssl
-# "Needed" for the vnstat module
+# Needed for vnstat module
 paramiko
-# "Needed" for SMART
-pySMART
+# Needed for S.M.A.R.T., >=1.0.6 for Python 3.8 compatibility
+pySMART>=1.0.6
