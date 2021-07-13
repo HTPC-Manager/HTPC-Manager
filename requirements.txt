@@ -16,6 +16,7 @@ jsonrpclib-pelix
 pytz
 pyasn1
 sqlobject
+workerpool
 
 # Hptc Manager will run fine fine without this ones. However if will miss some features
 # "Needed" for image resize etc
