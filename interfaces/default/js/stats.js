@@ -426,7 +426,7 @@ function reloadtab() {
 
 
     if (location.hash) {
-        $('a[href='+location.hash+']').tab('show');
+        $('a[href="' + location.hash + '"]').tab('show');
     } else {
         $('a[data-toggle="tab"]:first').tab('show')
     }

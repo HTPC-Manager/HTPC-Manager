@@ -391,7 +391,7 @@ function loadEpisodes(options) {
         },
         complete: function() {
             $('.spinner').hide();
-            $('a[href=#episodes]').tab('show');
+            $('a[href="#episodes"]').tab('show');
         }
     });
     $('#episode-grid').slideDown()
@@ -636,7 +636,7 @@ function loadSongs(options) {
             }
         },
         complete: function() {
-            $('a[href=#songs]').tab('show');
+            $('a[href="#songs"]').tab('show');
             $('.spinner').hide();
         }
     });
@@ -653,7 +653,7 @@ function loadNowPlaying() {
 
             if (data.playing_items.length == 0) {
                 $('#nowplaying').hide();
-                $('a[href=#playlist]').parent().hide();
+                $('a[href="#playlist"]').parent().hide();
                 return;
             }
             if (data.playing_items.length !== 0) {

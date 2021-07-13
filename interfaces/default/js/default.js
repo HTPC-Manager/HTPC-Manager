@@ -98,7 +98,7 @@ $(document).ready(function () {
 
     $(window).on('hashchange', function () {
         if (location.hash) {
-            $('a[href=' + location.hash + ']').tab('show', filter_cb(location.hash));
+            $('a[href="' + location.hash + '"]').tab('show', filter_cb(location.hash));
         } else {
             if ($('a[data-toggle="tab"]').length > 0) {
                 $('a[data-toggle="tab"]:first').tab('show', filter_cb());

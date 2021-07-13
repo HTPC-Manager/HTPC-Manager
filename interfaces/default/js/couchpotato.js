@@ -163,7 +163,7 @@ function addMovie(movieid, profile, title, catid) {
     $.getJSON(WEBDIR + 'couchpotato/AddMovie', data, function(result) {
         if (result.success) {
             notify('CouchPotato', 'Added ' + title, 'info');
-            $('a[href=#wanted]').tab('show')
+            $('a[href="#wanted"]').tab('show')
         } else {
             notify('CouchPotato', 'Failed to add ' + title, 'info')
         }
@@ -211,7 +211,7 @@ function refreshMovie(id, name) {
 
 function searchMovie(q) {
     var grid = $('#result-grid').empty()
-    $('a[href=#result]').tab('show')
+    $('a[href="#result"]').tab('show')
     $('.spinner').show()
     $.getJSON(WEBDIR + 'couchpotato/SearchMovie', {
         q: encodeURIComponent(q)

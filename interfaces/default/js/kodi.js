@@ -489,7 +489,7 @@ function loadEpisodes(options) {
         },
         complete: function() {
             $('.spinner').hide();
-            $('a[href=#episodes]').tab('show');
+            $('a[href="#episodes"]').tab('show');
         }
     });
     $('#episode-grid').slideDown()
@@ -752,7 +752,7 @@ function loadSongs(options) {
             }
         },
         complete: function() {
-            $('a[href=#songs]').tab('show');
+            $('a[href="#songs"]').tab('show');
             $('.spinner').hide();
         }
     });
@@ -803,7 +803,7 @@ function loadNowPlaying() {
         success: function(data) {
             if (data == null) {
                 $('#nowplaying').hide();
-                $('a[href=#playlist]').parent().hide();
+                $('a[href="#playlist"]').parent().hide();
                 return;
             }
             if (nowPlayingId != data.itemInfo.item.id) {
@@ -943,7 +943,7 @@ function loadPlaylist(type){
                 playlist.html('<tr><td colspan="4">Playlist is empty</td></tr>');
                 return;
             }
-            $('a[href=#playlist]').parent().show();
+            $('a[href="#playlist"]').parent().show();
 
             $.each(data.items, function(i, item){
                 var listItem = $('<tr>').attr('title',item.title).click(function(e) {
