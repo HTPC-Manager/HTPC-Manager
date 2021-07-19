@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import cherrypy
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
 import base64
 import htpc
 import logging
