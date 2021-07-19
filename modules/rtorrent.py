@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 
 
-import htpc, cherrypy, logging, xmlrpc.client, base64
+import htpc
+import cherrypy
+import logging
+import xmlrpc.client
+import base64
 from htpc.auth2 import require, member_of
 from htpc.helpers import serve_template, fix_basepath, striphttp
 
