@@ -8,7 +8,6 @@ import socket
 import struct
 from json import loads
 from urllib.request import Request, urlopen
-import urllib.request, urllib.parse, urllib.error
 from htpc.helpers import get_image, striphttp, joinArgs, cachedprime
 import logging
 import urllib.parse
