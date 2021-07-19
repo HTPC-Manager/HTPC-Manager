@@ -4,7 +4,7 @@
 import cherrypy
 import htpc
 from htpc.helpers import get_image, fan_art, tvmaze
-import urllib.request, urllib.parse, urllib.error
+import urllib.parse
 import logging
 from htpc.auth2 import require, member_of
 import requests
