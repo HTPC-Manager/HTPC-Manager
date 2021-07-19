@@ -17,7 +17,7 @@ Used as reference:
 import os
 import time
 from threading import Thread
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
 import subprocess
 import re
 from json import loads
