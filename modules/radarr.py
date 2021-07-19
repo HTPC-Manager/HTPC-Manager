@@ -4,7 +4,7 @@
 import datetime as DT
 from json import loads, dumps
 import logging
-import urllib.request, urllib.parse, urllib.error
+import urllib.parse
 
 import cherrypy
 from htpc.auth2 import require, member_of
