@@ -8,7 +8,7 @@ import socket
 import base64
 import ssdp
 import xmltodict
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
 import re
 import itertools
 import operator
