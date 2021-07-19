@@ -1,5 +1,5 @@
 import logging
-import urllib.request, urllib.parse, urllib.error
+import urllib.parse
 
 import requests
 import xmltodict
