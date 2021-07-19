@@ -4,8 +4,8 @@
 import cherrypy
 import htpc
 import logging
-import urllib.request, urllib.error, urllib.parse
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
 import base64
 import json
 from htpc.auth2 import require
