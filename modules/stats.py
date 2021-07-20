@@ -103,7 +103,6 @@ class Stats(object):
         return htpc.LOOKUP.get_template('stats.html').render(scriptname='stats',
                                                              importPsutil=importPsutil,
                                                              importPsutilerror=importPsutilerror,
-                                                             cmdline=htpc.SHELL,
                                                              importpySMART=importpySMART,
                                                              importpySMARTerror=importpySMARTerror,
                                                              scripts=self.list_scripts(),
