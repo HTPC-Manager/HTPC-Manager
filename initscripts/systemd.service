@@ -1,0 +1,11 @@
+[Unit]
+Description=HTPC Manager Daemon
+After=network.target
+
+[Service]
+User=htpc-manager
+SyslogIdentifier=HTPC Manager
+ExecStart=/usr/bin/python3 -OO /opt/htpc-manager/Htpc.py --datadir /opt/htpc-manager/userdata
+
+[Install]
+WantedBy=multi-user.target
