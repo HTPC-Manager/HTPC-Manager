@@ -11,7 +11,6 @@ import sys
 import htpc
 import webbrowser
 import locale
-import logging
 import importlib
 
 
@@ -27,14 +26,10 @@ def parse_arguments():
                         help='Use a specific host/IP')
     parser.add_argument('--port', type=int,
                         help='Use a specific port')
-    parser.add_argument('--shell', action='store_true', default=False,
-                        help='This argument has has been deprecated')
     parser.add_argument('--daemon', action='store_true', default=False,
                         help='Daemonize process')
     parser.add_argument('--pid', default=False,
                         help='Generate PID file at location')
-    parser.add_argument('--debug', action='store_true', default=False,
-                        help='This parameter has been deprecated')
     parser.add_argument('--dev', action='store_true', default=False,
                         help='Used while developing, prints debug messages uncensored, autoreload etc')
     parser.add_argument('--openbrowser', action='store_true', default=False,
@@ -237,9 +232,6 @@ def main():
         openbrowser = 'http%s://%s:%s%s' % (browser_ssl, str(browser_host), htpc.PORT, htpc.WEBDIR[:-1])
         webbrowser.open(openbrowser, new=2, autoraise=True)
 
-    # Select if you want to control processes and open from HTPC Manager
-    htpc.SHELL = args.shell
-
     # Select whether to run as daemon
     htpc.DAEMON = args.daemon
 
@@ -251,12 +243,6 @@ def main():
 
     # Inititialize root and settings page
     load_modules()
-
-    logger = logging.getLogger('root')
-    if args.debug:
-        logger.warning('Commandline parameter --debug has been deprecated')
-    if args.shell:
-        logger.warning('Shell parameter --shell has been deprecated')
 
     htpc.ARGS = sys.argv
 
