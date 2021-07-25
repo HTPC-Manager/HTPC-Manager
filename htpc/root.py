@@ -10,7 +10,7 @@ import sys
 import cherrypy
 import htpc
 import logging
-import urllib
+from urllib.parse import unquote
 from threading import Thread
 from htpc.auth2 import *
 from htpc.helpers import serve_template
@@ -99,14 +99,14 @@ class Root(object):
     @cherrypy.expose()
     @require(member_of(htpc.role_admin))
     def save_dash(self, dash_order=0):
-        htpc.settings.set("dash_order", urllib.unquote(dash_order).decode('utf-8'))
+        htpc.settings.set("dash_order", unquote(dash_order))
         return "Dashboard saved."
 
     @cherrypy.tools.json_out()
     @cherrypy.expose()
     @require(member_of(htpc.role_admin))
     def save_menu(self, menu_order=0):
-        htpc.settings.set("menu_order", urllib.unquote(menu_order).decode('utf-8'))
+        htpc.settings.set("menu_order", unquote(menu_order))
         return "Menu order saved."
 
     @cherrypy.expose()
