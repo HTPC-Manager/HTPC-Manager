@@ -14,7 +14,7 @@ $(document).ready(function(){
     });
 
     // Load data on tab display
-    $("a[data-toggle=\"tab\"]").click(function(e){
+    $("a[data-toggle=\"tab\"]").click(function(){
         $(".search").val("");
     }).on("shown", reloadTab);
     $(window).trigger("hashchange");
@@ -516,7 +516,7 @@ function update(){
 }
 
 function getCharts(cat){
-    var spinner = $(".spinner").show();
+    $(".spinner").show();
 
     $.getJSON(themoviedb_url.replace("{id}", cat), function(data){
         if(data === null || data.results.length === 0){
