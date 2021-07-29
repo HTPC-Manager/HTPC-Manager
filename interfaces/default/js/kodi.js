@@ -490,7 +490,7 @@ function loadEpisodes(options) {
                     episodeAnchor.append($('<h6>').addClass('title').html(shortenText(episode.label, 18)));
 
                     episodeItem.append(episodeAnchor);
-                    
+
                     $('#episode-grid').append(episodeItem);
                 });
             }
@@ -523,7 +523,7 @@ function loadEpisode(episode) {
             }
         });
     }
-    showModal(episode.showtitle + ' (' + episode.season + 'x' + episode.episode + ')', $('<div>').append(        
+    showModal(episode.showtitle + ' (' + episode.season + 'x' + episode.episode + ')', $('<div>').append(
         info
     ), buttons);
 }
