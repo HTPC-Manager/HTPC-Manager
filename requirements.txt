@@ -1,11 +1,33 @@
-# Hptc Manager will run fine fine without this ones. However if will miss some features
-# "Needed" for image resize etc
+# The following modules are mandatory:
+ssdp
+jaraco.collections
+six
+apscheduler
+pypi-xmlrpc
+colorama
+formencode
+requests
+requests-futures
+mako
+tzlocal
+xmltodict
+cherrypy<9.0
+jsonrpclib-pelix
+pytz
+pyasn1
+sqlobject
+workerpool
+
+# HTPC Manager runs without these, but misses some features:
+# Needed for image resize etc
 Pillow
-# "Needed" for stat module
-psutil>=0.7
-# "Needed for genereratin ssl cert key"
+# Needed for stat module
+psutil>=3.0.0
+# Needed for SSL cert and key generation
 pyopenssl
-# "Needed" for the vnstat module
+# Needed for vnstat module
 paramiko
-# "Needed" for converting subtitles on Kodi VOD
+# Needed for S.M.A.R.T., >=1.0.6 for Python 3.8 compatibility
+pySMART>=1.0.6
+# Needed for converting subtitles on Kodi VOD
 pycaption

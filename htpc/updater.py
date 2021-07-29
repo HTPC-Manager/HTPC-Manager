@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Update HTPC-Manager from Github. Either through git command or tarball.
+Update HTPC Manager from Github. Either through git command or tarball.
 
 Updater and SourceUpdater written by styxit
 https://github.com/styxit
@@ -15,8 +15,9 @@ Used as reference:
 - https://github.com/midgetspy/Sick-Beard/
 """
 import os
+import time
 from threading import Thread
-import urllib2
+import urllib.request
 import subprocess
 import re
 from json import loads
@@ -30,7 +31,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from htpc.root import do_restart
 
 # configure git repo
-gitUser = 'Hellowlol'
+gitUser = 'HTPC-Manager'
 gitRepo = 'HTPC-Manager'
 
 
@@ -41,6 +42,9 @@ class Updater(object):
         self.updateEngineName = 'Unknown'
         # Set update engine. Use git updater or update from source.
         self.updateEngine = self.getEngine()
+        htpc.CURRENT_HASH = self.updateEngine.current()
+        htpc.BRANCH = self.updateEngine.current_branch_name()
+        htpc.UPDATERTYPE = self.updateEngineName
         # Check for updates automatically
         htpc.SCHED.add_job(self.update_needed, trigger=IntervalTrigger(hours=6))
 
@@ -71,10 +75,13 @@ class Updater(object):
         if platform.system().lower() == 'windows':
             if gp != gp.lower():
                 alternative_gp.append(gp.lower())
-            # Comment out the line beflow to test the source updater
-            # alternative_gp += ["%USERPROFILE%\AppData\Local\GitHub\PORTAB~1\bin\git.exe", "C:\Program Files (x86)\Git\bin\git.exe"]
+            # Disable this if dev as it would be impossible
+            # to teste the source updater
+            if not htpc.DEV:
+                alternative_gp += ["%USERPROFILE%\AppData\Local\GitHub\PORTAB~1\bin\git.exe", "C:\Program Files (x86)\Git\bin\git.exe"]
         # Returns a empty string if failed
         output = GitUpdater().git_exec(gp, 'version')
+        self.logger.debug("Found git path %s" % gp)
 
         if output:
             # Found a working git path.
@@ -163,7 +170,7 @@ class Updater(object):
 
         # If HTPC Manager is up to date, updating is not needed
         if current == latest and current != "Unknown":
-            self.logger.info("HTPC-Manager is Up-To-Date.")
+            self.logger.info("HTPC Manager is Up-To-Date.")
             output['versionsBehind'] = 0
             htpc.COMMITS_BEHIND = 0
             output['updateNeeded'] = False
@@ -180,11 +187,11 @@ class Updater(object):
         self.logger.debug('Checking how far behind latest')
         try:
             url = 'https://api.github.com/repos/%s/%s/compare/%s...%s' % (gitUser, gitRepo, current, latest)
-            result = loads(urllib2.urlopen(url).read())
+            result = loads(urllib.request.urlopen(url).read().decode('utf-8'))
             behind = int(result['total_commits'])
             self.logger.debug('Behind: ' + str(behind))
             return behind
-        except Exception, e:
+        except Exception as e:
             self.logger.error(str(e))
             self.logger.error('Could not determine how far behind')
             return 'Unknown'
@@ -206,22 +213,23 @@ class Updater(object):
         else:
             htpc.UPDATE_AVAIL = False
         # Since im stupid, protect me please.. srsly its for myself.
-        if htpc.UPDATE_AVAIL and htpc.settings.get("app_auto_update", False) and not htpc.DEBUG:
+        if htpc.UPDATE_AVAIL and htpc.settings.get("app_auto_update", False) and not htpc.DEV:
             self.logger.debug("Auto updating now!")
             Thread(target=self.updateEngine.update).start()
 
 
-class GitUpdater():
+class GitUpdater(object):
     """ Class to update HTPC Manager using git commands. """
+
     def __init__(self):
-        """ Set GitHub settings on load """
+        """ Set GitHub settings on load. """
         self.UPDATING = 0
         self.git = htpc.settings.get('git_path', 'git')
         self.logger = logging.getLogger('htpc.updater')
         #self.update_remote_origin() # Disable this since it a fork for now.
 
     def update_remote_origin(self):
-        self.git_exec(self.git, 'config remote.origin.url https://github.com/Hellowlol/HTPC-Manager.git')
+        self.git_exec(self.git, 'config remote.origin.url https://github.com/HTPC-Manager/HTPC-Manager.git')
 
     def current_branch_name(self):
         output = self.git_exec(self.git, 'rev-parse --abbrev-ref HEAD')
@@ -231,22 +239,22 @@ class GitUpdater():
             return htpc.settings.get('branch', 'master2')
 
     def latest(self):
-        """ Get hash of latest commit on github """
+        """ Get hash of latest commit on github. """
         self.logger.debug('Getting latest version from github.')
         try:
             url = 'https://api.github.com/repos/%s/%s/commits/%s' % (gitUser, gitRepo, self.current_branch_name())
-            result = loads(urllib2.urlopen(url).read())
+            result = loads(urllib.request.urlopen(url).read().decode('utf-8'))
             latest = result['sha'].strip()
             self.logger.debug('Branch: %s' % self.current_branch_name())
             self.logger.debug('Latest sha: %s' % latest)
             self.latestHash = latest
             return latest
         except Exception as e:
-            self.logger.error("Failed to get last commit from github")
+            self.logger.error("Failed to get last commit from github %s" % e)
             return False
 
     def current(self):
-        """ Get hash of current Git commit """
+        """ Get hash of current Git commit. """
         self.logger.debug('Getting current version.')
         output = self.git_exec(self.git, 'rev-parse HEAD')
         self.logger.debug('Current version: ' + output)
@@ -272,7 +280,7 @@ class GitUpdater():
             # If its false, default to master branch
             d["branch"] = htpc.settings.get('branch', 'master2')
 
-        branches = self.git_exec(self.git, 'ls-remote --heads https://github.com/Hellowlol/HTPC-Manager.git')
+        branches = self.git_exec(self.git, 'ls-remote --heads https://github.com/HTPC-Manager/HTPC-Manager.git')
         if branches:
             # find all branches except the current branch.
             d["branches"] = [b for b in re.findall('\S+\Wrefs/heads/(.*)', branches) if b != cbn]
@@ -280,7 +288,8 @@ class GitUpdater():
         return [d]
 
     def update(self):
-        """ Do update through git """
+        """ Do update through git. """
+
         self.logger.info("Attempting update through Git.")
         self.UPDATING = 1
 
@@ -293,29 +302,31 @@ class GitUpdater():
         elif 'Aborting.' in output:
             self.logger.error("Update aborted.")
         else:
-            if htpc.settings.get('git_cleanup') and not htpc.DEBUG:
+            if htpc.settings.get('git_cleanup') and not htpc.DEV:
                 self.logger.debug("Clean up after git")
                 self.git_exec(self.git, 'reset --hard')
-                # Note to self rtfm before you run git commands, just wiped the data dir...
+                # Note to self: rtfm before you run git commands, just wiped the data dir...
                 # This command removes all untracked files and files and the files in .gitignore
                 # except from the content of htpc.DATADIR and VERSION.txt
                 self.git_exec(self.git, 'clean -d -fx -e %s -e VERSION.txt -e userdata/' % htpc.DATADIR)
             self.logger.warning('Restarting HTPC Manager after update.')
+            htpc.settings.set('app_updated_at', str(time.time()))
             # Restart HTPC Manager to make sure all new code is loaded
             do_restart()
 
         self.UPDATING = 0
 
     def git_exec(self, gp, args):
-        """ Tool for running git program on system """
+        """ Tool for running git program on system. """
+
         try:
             proc = subprocess.Popen(gp + " " + args, stdout=subprocess.PIPE,
-                        stderr=subprocess.STDOUT, shell=True, cwd=htpc.RUNDIR)
+                                    stderr=subprocess.STDOUT, shell=True, cwd=htpc.RUNDIR, universal_newlines=True)
             output, err = proc.communicate()
             exitcode = proc.returncode
 
             self.logger.debug("Running %s %s" % (gp, args))
-        except OSError, e:
+        except OSError as e:
             self.logger.warning(str(e))
             return ''
 
@@ -326,6 +337,7 @@ class GitUpdater():
         if err:
             self.logger.warning(output + ' - ' + err)
             return ''
+
         if any(s in output for s in ['not found', 'not recognized', 'fatal:']):
             self.logger.warning(output)
             return ''
@@ -333,7 +345,7 @@ class GitUpdater():
             return output.strip()
 
 
-class SourceUpdater():
+class SourceUpdater(object):
     """ Class to update HTPC Manager using Source code from Github. Requires a full download on every update."""
     def __init__(self):
         self.UPDATING = 0
@@ -361,9 +373,8 @@ class SourceUpdater():
                 return False
 
         """ Get version from version file """
-        fp = open(self.versionFile, 'r')
-        currentVersion = fp.read().strip(' \n\r')
-        fp.close()
+        with open(self.versionFile, 'r') as fp:
+            currentVersion = fp.read().strip(' \n\r')
 
         self.logger.debug('Current version: ' + currentVersion)
 
@@ -380,7 +391,7 @@ class SourceUpdater():
         self.logger.debug('Getting latest version from github.')
         try:
             url = 'https://api.github.com/repos/%s/%s/commits/%s' % (gitUser, gitRepo, htpc.settings.get('branch', 'master2'))
-            result = loads(urllib2.urlopen(url).read())
+            result = loads(urllib.request.urlopen(url).read().decode('utf-8'))
             latest = result['sha'].strip()
             self.logger.debug('Latest version: ' + latest)
             self.latestHash = latest
@@ -394,12 +405,11 @@ class SourceUpdater():
 
         versionfile = self.current()
         current_branch = htpc.settings.get('branch', 'master2')
-        #current_branch = htpc.settings.get('branch', 'Unknown')
         # should return sha on success not True False
         if not isinstance(self.current(), bool):
             try:
                 url = "https://api.github.com/repos/%s/%s/branches?per_page=100" % (gitUser, gitRepo)
-                branches = loads(urllib2.urlopen(url).read())
+                branches = loads(urllib.request.urlopen(url).read().decode('utf-8'))
                 for branch in branches:
                     if branch["commit"]["sha"] == versionfile:
                         current_branch = branch["name"]
@@ -422,13 +432,13 @@ class SourceUpdater():
         try:
             url = "https://api.github.com/repos/%s/%s/branches?per_page=100" % (gitUser, gitRepo)
             branchlist = []
-            branches = loads(urllib2.urlopen(url).read())
+            branches = loads(urllib.request.urlopen(url).read().decode('utf-8'))
             for branch in branches:
                 branchlist.append(branch["name"])
             d["branches"] = [b for b in branchlist if b != cbn]
             return d
 
-        except Exception, e:
+        except Exception as e:
             self.logger.error(str(e))
             self.logger.error('Could not find any branches, setting default master2')
             return [d]
@@ -465,6 +475,7 @@ class SourceUpdater():
 
         # Restart HTPC Manager to make sure all new code is loaded
         self.logger.warning('Restarting HTPC Manager after update.')
+        htpc.settings.set('app_updated_at', str(time.time()))
         do_restart()
 
     def __downloadTar(self, url, destination):
@@ -472,7 +483,7 @@ class SourceUpdater():
         self.logger.info('Downloading update from %s' % url)
         try:
             self.logger.debug('Downloading update file to %s' % destination)
-            downloadedFile = urllib2.urlopen(url)
+            downloadedFile = urllib.request.urlopen(url)
             f = open(destination, 'wb')
             f.write(downloadedFile.read())
             f.close()
@@ -500,7 +511,7 @@ class SourceUpdater():
     def __updateSourcecode(self):
         # Find the extracted dir
         sourceUpdateFolder = [x for x in os.listdir(self.updateDir) if
-                                   os.path.isdir(os.path.join(self.updateDir, x))]
+                              os.path.isdir(os.path.join(self.updateDir, x))]
 
         if len(sourceUpdateFolder) != 1:
             # There can only be one folder in sourceUpdateFolder
@@ -513,20 +524,55 @@ class SourceUpdater():
 
         self.logger.debug('Overwriting files.')
 
+        # Add all existing files and folders to a list
+        # used to clean up old files and folders
+        all_files_n_folders = []
+        for src_dir, dirs, files in os.walk(htpc.RUNDIR):
+            for f in files:
+                if f != 'VERSION.txt' and not f.startswith('.'):
+                    all_files_n_folders.append(os.path.join(src_dir, f))
+            for fd in dirs:
+                all_files_n_folders.append(os.path.join(src_dir, fd))
+
         try:
             # Loop files and folders and place them in the HTPC Manager path
             for src_dir, dirs, files in os.walk(contentdir):
                 dst_dir = src_dir.replace(contentdir, targetFolder)
+
+                try:
+                    all_files_n_folders.remove(dst_dir)
+                except ValueError:
+                    pass
+
                 if not os.path.exists(dst_dir):
                     os.mkdir(dst_dir)
+
                 for file_ in files:
                     src_file = os.path.join(src_dir, file_)
                     dst_file = os.path.join(dst_dir, file_)
                     if os.path.exists(dst_file):
                         os.remove(dst_file)
                     shutil.move(src_file, dst_dir)
-        except:
-            self.logger.warning('Failed to overwrite old files')
+
+                    try:
+                        #self.logger.debug('Tried to remove %s from all_files_n_folders' % dst_file)
+                        all_files_n_folders.remove(dst_file)
+                    except ValueError:
+                        pass
+
+            # Try to remove all old files
+            for existing_file in all_files_n_folders:
+                if htpc.DATADIR in existing_file or '.git' in existing_file:
+                    continue
+
+                try:
+                    os.remove(existing_file)
+                    self.logger.debug('Successfully removed %s' % existing_file)
+                except Exception as e:
+                    pass
+
+        except Exception as e:
+            self.logger.warning('Failed to overwrite old files %s' % e)
             self.__finishUpdate()
             return False
 
@@ -539,9 +585,8 @@ class SourceUpdater():
 
         Used when checking for update the next time.
         """
-        versionFileHandler = open(self.versionFile, 'wb')
-        versionFileHandler.write(newVersion)
-        versionFileHandler.close()
+        with open(self.versionFile, 'wb') as versionFileHandler:
+            versionFileHandler.write(newVersion)
 
     def __finishUpdate(self):
         """ Remove leftover files after the update """
@@ -551,12 +596,12 @@ class SourceUpdater():
             self.logger.debug('Removing update archive')
             try:
                 os.remove(self.updateFile)
-            except:
-                pass
+            except OSError as e:
+                self.logger.error('Failed to remove %s %s' % (self.updateFile, e))
 
         if os.path.isdir(self.updateDir):
             self.logger.debug('Removing update code folder')
             try:
                 shutil.rmtree(self.updateDir)
-            except:
-                pass
+            except OSError as e:
+                self.logger.error('Failed to remove %s %s' % (self.updateDir, e))

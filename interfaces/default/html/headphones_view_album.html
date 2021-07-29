@@ -4,13 +4,15 @@
         <h1 class="page-header page-title" data-artistid="${artist_id}" data-albumid="${album_id}" data-albumimg="${album['ArtworkURL']}">
             <span class="headphones_albumname">${album['AlbumTitle']}</span>
             <div class="btn-group show-options-menu pull-right">
-                <a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#">
-                    <i class="icon-wrench"></i>&nbsp;<span class="caret"></span>
+                <a class="btn dropdown-toggle" data-hover="dropdown" data-toggle="dropdown" href="#">
+                    <i class="fa fa-cogs fa-lg"></i>
+                    <i class="fa fa-chevron-down fa-fw"></i>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a href="${self.attr.webdir}headphones/QueueAlbum/${album_id}&new=True" class="ajax-link"><i class="icon-search"></i> Force Check </a></li>
-                    <li><a href="${self.attr.webdir}headphones/QueueAlbum/${album_id}" class="ajax-link"><i class="icon-heart"></i> Wanted Album </a></li>
-                    <li><a href="${self.attr.webdir}headphones/UnqueueAlbum/${album_id}" class="ajax-link"><i class="icon-step-forward"></i> Skip Album </a></li>
+                    <li><a href="${self.attr.webdir}headphones/QueueAlbum/${album_id}&new=True" class="ajax-link"><i class="fa fa-search fa-fw"></i> Force Check </a></li>
+                    <li class="divider"></li>
+                    <li><a href="${self.attr.webdir}headphones/QueueAlbum/${album_id}" class="ajax-link"><i class="fa fa-heart fa-fw"></i> Wanted Album </a></li>
+                    <li><a href="${self.attr.webdir}headphones/UnqueueAlbum/${album_id}" class="ajax-link"><i class="fa fa-step-forward fa-fw"></i> Skip Album </a></li>
                 </ul>
             </div>
         </h1>
@@ -23,7 +25,7 @@
         </ul>
 
         <div id="banner" class="row-fluid banner">
-            <div class="span8" style="min-height: 0px;"><img class="img-polaroid img-rounded album_img"></div>
+            <div class="span8" style="min-height: 0;"><img class="img-polaroid img-rounded album_img"></div>
             <div class="album_details span4 pull-right">
                 <div id="album_details_top" class="span4"></div>
                 <strong>Album details</strong>
@@ -40,6 +42,10 @@
                         <td>Release Date</td>
                         <td class="headphones_release_date">${album['ReleaseDate']}</td>
                     </tr>
+                    <tr>
+                        <td>Type</td>
+                        <td class="headphones_album_type">${album['Type']}</td>
+                    </tr>
                 </table>
                 <div id="album_details_bottom" class="span4"></div>
             </div>
@@ -52,7 +58,6 @@
                     <th>Track</th>
                     <th>Title</th>
                     <th>Length</th>
-                    <th>Action</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -61,7 +66,6 @@
                     <td>${track['TrackNumber']}</td>
                     <td>${track['TrackTitle']}</td>
                     <td>${track['DurationText']}</td>
-                    <td>${track['TrackStatus']}</td>
                 </tr>
                 % endfor
                 </tbody>

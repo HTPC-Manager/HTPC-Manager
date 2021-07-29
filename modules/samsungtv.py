@@ -8,11 +8,11 @@ import socket
 import base64
 import ssdp
 import xmltodict
-import urllib2
+import urllib.request
 import re
 import itertools
 import operator
-from cherrypy.lib.auth2 import require
+from htpc.auth2 import require
 #from uuid import getnode as get_mac
 
 
@@ -33,8 +33,8 @@ class Samsungtv:
                 ]},
                 {'type': 'text', 'label': 'IP / Host *', 'name': 'samsungtv_host'},
                 {'type': 'text', 'label': 'Tv Model', 'name': 'samsungtv_model'},
-                {'type': 'text', 'label': 'HTPC-Manager MAC', 'name': 'samsung_htpcmac'},
-                {'type': 'text', 'label': 'HTPC-Manager IP', 'name': 'samsung_htpchost'}
+                {'type': 'text', 'label': 'HTPC Manager MAC', 'name': 'samsung_htpcmac'},
+                {'type': 'text', 'label': 'HTPC Manager IP', 'name': 'samsung_htpchost'}
 
         ]})
 
@@ -53,7 +53,7 @@ class Samsungtv:
             else:
                 src = htpc.settings.get('samsung_htpchost', '')
                 mac = htpc.settings.get('samsung_htpcmac', '')
-                remote = 'HTPC-Manager remote'
+                remote = 'HTPC Manager Remote'
                 dst = htpc.settings.get('samsungtv_host', '')
                 application = 'python'
                 tv  = htpc.settings.get('samsungtv_model', '')
@@ -76,7 +76,7 @@ class Samsungtv:
                 new.send(pkt)
                 new.close()
         except Exception as e:
-            print e
+            print(e)
             self.logger.debug('Failed to send %s to the tv' % key)
 
     def getIPfromString(self, string):
@@ -119,7 +119,7 @@ class Samsungtv:
                 host = self.getIPfromString(item.location)
                 if host:
                     try:
-                        desc = urllib2.urlopen(item.location).read()
+                        desc = urllib.request.urlopen(item.location).read()
                         d = {}
                         xml = xmltodict.parse(desc)
                         if 'tv' in xml["root"]["device"]["friendlyName"].lower():
@@ -147,7 +147,7 @@ class Samsungtv:
         result_list.sort(key=getvals)
         result = []
         for k, g in itertools.groupby(result_list, getvals):
-            result.append(g.next())
+            result.append(next(g))
         result_list[:] = result
 
         return result_list

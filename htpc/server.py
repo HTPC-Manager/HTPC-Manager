@@ -10,8 +10,8 @@ import logging
 from sqlobject import SQLObjectNotFound
 from htpc.manageusers import Manageusers
 from cherrypy.process.plugins import Daemonizer, PIDFile
-from helpers import create_https_certificates
-from root import do_restart
+from .helpers import create_https_certificates
+from .root import do_restart
 
 
 def secureheaders():
@@ -41,7 +41,9 @@ def start():
 
     # Wrap htpc manager in secure headers.
     # http://cherrypy.readthedocs.org/en/latest/advanced.html#securing-your-server
-    cherrypy.tools.secureheaders = cherrypy.Tool('before_finalize', secureheaders, priority=60)
+    if htpc.settings.get('app_use_secure_headers', True):
+        cherrypy.tools.secureheaders = cherrypy.Tool('before_finalize', secureheaders, priority=60)
+        cherrypy.config.update({'tools.secureheaders.on': True})
 
     # Enable auth if username and pass is set, add to db as admin
     if htpc.USERNAME and htpc.PASSWORD:
@@ -65,21 +67,18 @@ def start():
         })
 
     # Set server environment to production unless when debugging
-    if not htpc.DEBUG:
+    if not htpc.DEV:
         cherrypy.config.update({
             'environment': 'production'
         })
 
-    # If ssl is enabled but there is not cert og key, try to make self signed.
-    if htpc.USE_SSL:
-        # Check if the cert and  key exists
-        if not (htpc.SSLCERT and os.path.exists(htpc.SSLCERT)) and not (htpc.SSLKEY and os.path.exists(htpc.SSLKEY)):
-            serverkey = os.path.join(htpc.DATADIR, 'server.key')
-            cert = os.path.join(htpc.DATADIR, 'server.crt')
+    if htpc.settings.get('app_use_ssl'):
+        serverkey = os.path.join(htpc.DATADIR, 'server.key')
+        cert = os.path.join(htpc.DATADIR, 'server.cert')
+        # If either the HTTPS certificate or key do not exist, make some self-signed ones.
+        if not (cert and os.path.exists(cert)) or not (serverkey and os.path.exists(serverkey)):
             logger.debug('There isnt any certificate or key, trying to make them')
-
-            # If they dont exist, make them.
-            if create_https_certificates(serverkey, cert):
+            if create_https_certificates(cert, serverkey):
                 # Save the new crt and key to settings
                 htpc.SSLKEY = htpc.settings.set('app_ssl_key', serverkey)
                 htpc.SSLCERT = htpc.settings.set('app_ssl_cert', cert)
@@ -88,16 +87,15 @@ def start():
                 logger.info("Restarting to activate SSL")
                 do_restart()
 
-        if (htpc.SSLCERT and os.path.exists(htpc.SSLCERT)) and (htpc.SSLKEY and os.path.exists(htpc.SSLKEY)):
+        if (os.path.exists(htpc.settings.get('app_ssl_cert')) and os.path.exists(htpc.settings.get('app_ssl_key'))):
             htpc.ENABLESSL = True
 
     if htpc.ENABLESSL:
         protocol = "s"
         logger.debug("SSL is enabled")
         cherrypy.config.update({
-                'server.ssl_module': 'builtin',
-                'server.ssl_certificate': htpc.SSLKEY,
-                'server.ssl_private_key': htpc.SSLCERT
+                'server.ssl_certificate': htpc.settings.get('app_ssl_cert'),
+                'server.ssl_private_key': htpc.settings.get('app_ssl_key')
 
         })
 
@@ -138,16 +136,17 @@ def start():
             'tools.staticdir.root': webdir,
             'tools.encode.on': True,
             'tools.encode.encoding': 'utf-8',
+            'tools.encode.text_only': False,    # Added when ported from Py2 to Py3
             'tools.gzip.on': True,
-            'tools.gzip.mime_types': ['text/html', 'text/plain', 'text/css', 'text/javascript', 'application/json', 'application/javascript'],
-            'tools.secureheaders.on': True
+            'tools.gzip.mime_types': ['text/html', 'text/plain', 'text/css', 'text/javascript', 'application/json', 'application/javascript']
+
         },
         '/js': {
             'tools.caching.on': True,
             'tools.caching.force': True,
             'tools.caching.delay': 0,
             'tools.expires.on': True,
-            'tools.expires.secs': 60 * 60 * 24 * 7,
+            'tools.expires.secs': 60 * 60 * 24 * 30,
             'tools.staticdir.on': True,
             'tools.auth.on': False,
             'tools.sessions.on': False,
@@ -158,7 +157,7 @@ def start():
             'tools.caching.force': True,
             'tools.caching.delay': 0,
             'tools.expires.on': True,
-            'tools.expires.secs': 60 * 60 * 24 * 7,
+            'tools.expires.secs': 60 * 60 * 24 * 30,
             'tools.staticdir.on': True,
             'tools.auth.on': False,
             'tools.sessions.on': False,
@@ -169,7 +168,7 @@ def start():
             'tools.caching.force': True,
             'tools.caching.delay': 0,
             'tools.expires.on': True,
-            'tools.expires.secs': 60 * 60 * 24 * 7,
+            'tools.expires.secs': 60 * 60 * 24 * 30,
             'tools.staticdir.on': True,
             'tools.auth.on': False,
             'tools.sessions.on': False,
@@ -178,20 +177,30 @@ def start():
         '/favicon.ico': {
             'tools.caching.on': True,
             'tools.caching.force': True,
-            'tools.caching.delay': 0,
             'tools.expires.on': True,
-            'tools.expires.secs': 60 * 60 * 24 * 7,
+            'tools.expires.secs': 60 * 60 * 24 * 30,
             'tools.staticfile.on': True,
             'tools.auth.on': False,
             'tools.sessions.on': False,
             'tools.staticfile.filename': favicon
-        },
+        }
     }
 
     # Start the CherryPy server
     logger.info("Starting up webserver")
-    print '*******************************************************************'
-    print 'Starting HTPC Manager on port ' + str(htpc.PORT) + '.'
-    print 'Start your browser and go to http%s://localhost:%s%s' % (protocol, htpc.PORT, htpc.WEBDIR[:-1])
-    print '*******************************************************************'
+    print('*******************************************************************')
+    print('Starting HTPC Manager on port ' + str(htpc.PORT) + '.')
+    print('Start your browser and go to http%s://localhost:%s%s' % (protocol, htpc.PORT, htpc.WEBDIR[:-1]))
+    print('*******************************************************************')
+    cherrypy.config.update({
+        'global': {
+            'engine.autoreload.on' : False, # Should reduce CPU usage
+            'environment' : 'production',
+        },
+    })
+
+    # Disable timeout monitor on CherryPy < 12.0
+    if hasattr(cherrypy.engine, 'timeout_monitor'):
+        cherrypy.config.update({'global': {'engine.timeout_monitor.on': False}})
+
     cherrypy.quickstart(htpc.ROOT, htpc.WEBDIR[:-1], config=app_config)

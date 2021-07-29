@@ -2,20 +2,30 @@
 $(document).ready(function () {
     var clients
     get_clients()
-    $('.torrent_search_table').tablesorter();
+    $(window).trigger('hashchange')
+
     // Disables nzb search if torrent search page is open
     if ($('.formsearch').length) {
         $('.formsearch').addClass('disabled');
-    } else {
-        //pass
     }
+    $('.search').attr('placeholder', "Filter torrents")
 
-    $('.formsearch').submit(function (e) {
+    var TorrentSearch = function (e) {
         e.preventDefault();
-        query = $(e.target).find('.search').val();
-        if (query === undefined) return;
-        search(query);
+        var query = $('#tsinput').val();
+        var provider = $('#formindexer').val();
+        if (query) {
+            search(query, provider);
+        }
+    };
+
+    $('#tsinput').keyup(function(event){
+        if(event.keyCode == 13){
+            TorrentSearch
+        }
     });
+
+    $('#search_torrent_button').click(TorrentSearch);
 });
 
 // Sends torrent to the client on click
@@ -32,35 +42,31 @@ $(document).on('click', '.dlt', function (e) {
 
 
 // Based on btn for now, should use a generic one..
-function search(query) {
+function search(query, provider) {
     if (query.length === 0) return;
     $('.spinner').show();
     $('#torrent_search_results').empty();
     $('#error_msg').empty();
 
-    $.getJSON(WEBDIR + "torrentsearch/search/" + query, function (response) {
+    $.getJSON(WEBDIR + "torrentsearch/search?query=" + query +  '&provider=' + provider,function (response) {
 
-        // Stops the function from running if the search dont get any hits
+        // Stops the function from running if the search doesn't get any hits
         if (!response.length) {
-            $('#error_msg').text('Didnt find any torrents with the query ' + query);
-            $('#error_msg').css({"font-weight": "bold"});
+            $('#error_msg').html('Didnt find any torrents with the query <code>' + query + '</code>');
             $('.spinner').hide();
             return;
         }
 
         $.each(response, function (index, torrent) {
             tr = $('<tr>');
-
-            img = $('<img alt="icon">').attr('src', '../img/'+ torrent.Provider + '.png')
             link = $('<a target="_blank">').attr('href', torrent.BrowseURL).text(torrent.ReleaseName)
 
             tr.append(
-            $('<td>').append(img), // provider icon
+            $('<td>').append($('<i>').addClass('rg rg-provider rg-' + torrent.Provider + '-c')), // provider icon
             $('<td>').append(link),
-            //$('<td class="span3 torrentsearch_releasename">').text(torrent.ReleaseName),
             $('<td>').addClass('torrentsearch_seeders').text(torrent.Seeders),
             $('<td>').addClass('torrentsearch_leechers').text(torrent.Leechers),
-            $('<td>').addClass('torrentsearch_size">').text(bytesToSize(torrent.Size, 2)),
+            $('<td>').addClass('torrentsearch_size">').text(humanFileSize(torrent.Size, 2)),
             $('<td>').addClass('hidden-phone torrentsearch_source').text(torrent.Source),
             $('<td>').addClass('hidden-phone torrentsearch_resolution').text(torrent.Resolution),
             $('<td>').addClass('hidden-phone torrentsearch_container').text(torrent.Container),
@@ -71,37 +77,38 @@ function search(query) {
 
 
         });
-    // Leting sort plugin know that there was a ajax call
+    // Letting sort plugin know that there was a ajax call
     $('.spinner').hide();
+    byteSizeOrdering()
     $('.torrent_search_table').trigger('update');
     // sort on seeds 0 based 0 1 2
-    $('table').trigger("sorton", [[[2,1]]]);
+
 
     });
 }
 
 function atc(torrent) {
     var b = $('<div>').addClass('btn-group');
-        // Used to check if there is any active clients
+        // Used to check if there are any active clients
         var n = 0;
         $.each(clients, function (i, client) {
             if (client.active === 1) {
-                var button = $('<a>').addClass('btn btn-mini dlt').
+                var button = $('<a>').addClass('btn btn-mini dlt rg-client').
                 attr('data-client', client.title).
                 attr('data-path', client.path).
                 attr('data-cmd', client.cmd).
                 attr('data-name', torrent.ReleaseName). // not correct
                 attr('data-hash', torrent.DownloadURL).
                 attr('href', "#");
-                // If there any active clients add 1 to n
+                // If there are any active clients add 1 to n
                 n += 1;
                 // Makes icon and pop title
-                var img = makeIcon("icon-download-alt", client.title);
+                var img = makeIcon("rg rg-" + client.title.toLowerCase() + "-c", client.title);
                 button.append(img);
                 b.append(button);
             }
         });
-        // Checks if there is any active clients, if it isnt add a error message.
+        // Checks if there are any active clients, if there isn't add an error message.
         if (n === 0) { // remove || 1 if needed was to test
             b.append('No active clients').removeClass('btn-group');
             return b;

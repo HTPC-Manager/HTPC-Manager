@@ -2,16 +2,19 @@
 # -*- coding: utf-8 -*-
 
 import cherrypy
-import urllib2
+import urllib.request
+import urllib.parse
 import base64
 import htpc
+import logging
 from json import dumps, loads
-from cherrypy.lib.auth2 import require
+from htpc.auth2 import require
 from htpc.helpers import striphttp
 
 
 class Squeezebox(object):
     def __init__(self):
+        self.logger = logging.getLogger('modules.squeezebox')
         htpc.MODULES.append({
             'name': 'Squeezebox',
             'id': 'squeezebox',
@@ -22,7 +25,7 @@ class Squeezebox(object):
                 {'type': 'text', 'label': 'Port *', 'name': 'squeezebox_port'},
                 {'type': 'text', 'label': 'Username', 'name': 'squeezebox_username'},
                 {'type': 'password', 'label': 'Password', 'name': 'squeezebox_password'},
-                {'type': 'text', 'label': 'Reverse proxy link', 'placeholder': '', 'desc': 'Reverse proxy link ex: https://domain.com/sq', 'name': 'squeezebox_reverse_proxy_link'},
+                {'type': 'text', 'label': 'Reverse proxy link', 'placeholder': '', 'desc': 'Reverse proxy link, e.g. https://domain.com/sq', 'name': 'squeezebox_reverse_proxy_link'},
 
             ]
         })
@@ -30,11 +33,11 @@ class Squeezebox(object):
     @cherrypy.expose()
     @require()
     def index(self):
-        return htpc.LOOKUP.get_template('squeezebox.html').render(scriptname='squeezebox',webinterface=self.webinterface())
+        return htpc.LOOKUP.get_template('squeezebox.html').render(scriptname='squeezebox', webinterface=self.webinterface())
 
     def webinterface(self):
         ip = htpc.settings.get('squeezebox_host')
-        port = htp.settings.get('squeezebox_ip')
+        port = htpc.settings.get('squeezebox_ip')
         url = 'http://%s:%s' % (ip, port)
 
         if htpc.settings.get('squeezebox_reverse_proxy_link'):
@@ -42,12 +45,11 @@ class Squeezebox(object):
 
         return url
 
-
     @cherrypy.expose()
     @require()
     @cherrypy.tools.json_out()
     def PlayerControl(self, player, command):
-        command = urllib2.unquote(command)
+        command = urllib.parse.unquote(command)
         return self.jsonRequest(player, command.split())
 
     @cherrypy.expose()
@@ -66,12 +68,12 @@ class Squeezebox(object):
     @require()
     def GetCover(self, player):
         url = self.webhost('music/current/cover.jpg?player=' + player)
-        request = urllib2.Request(url)
+        request = urllib.request.Request(url)
         auth = self.auth()
         if auth:
             request.add_header("Authorization", "Basic %s" % auth)
         cherrypy.response.headers['Content-Type'] = "image/jpeg"
-        return urllib2.urlopen(request).read()
+        return urllib.request.urlopen(request).read()
 
     @cherrypy.expose()
     @require()
@@ -119,23 +121,22 @@ class Squeezebox(object):
         return self.jsonRequest("", ["playlists", "0"])
 
     def webhost(self, path=''):
-        settings = htpc.settings
-        host = striphttp(settings.get('squeezebox_host', ''))
-        port = str(settings.get('squeezebox_port', ''))
-        return 'http://' + host + ':' + str(port) + '/' + path
+        host = striphttp(htpc.settings.get('squeezebox_host', ''))
+        port = htpc.settings.get('squeezebox_port', '')
+        return 'http://%s:%s/%s' % (host, port, path)
 
     def auth(self):
-        settings = htpc.settings
-        username = settings.get('squeezebox_username', '')
-        password = settings.get('squeezebox_password', '')
+        username = htpc.settings.get('squeezebox_username', '')
+        password = htpc.settings.get('squeezebox_password', '')
         if username and password:
             return base64.encodestring('%s:%s' % (username, password)).strip()
 
     def jsonRequest(self, player, params):
         data = dumps({"id": 1, "method": "slim.request", "params": [player, params]})
-        request = urllib2.Request(self.webhost('jsonrpc.js'), data)
+        self.logger.debug(data)
+        request = urllib.request.Request(self.webhost('jsonrpc.js'), data)
         auth = self.auth()
         if (auth):
             request.add_header("Authorization", "Basic %s" % auth)
-        result = urllib2.urlopen(request, timeout=5).read()
+        result = urllib.request.urlopen(request, timeout=5).read()
         return loads(result.decode('utf-8'))

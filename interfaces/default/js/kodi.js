@@ -10,6 +10,9 @@ var sorting = {
 $(document).ready(function() {
     playerLoader = setInterval('loadNowPlaying()', 1000);
     hideWatched = $('#hidewatched').hasClass('active')?1:0;
+    $('.formsearch').submit(function(e) {
+        e.preventDefault()
+    });
 
     // Load data on tab display
     $('a[data-toggle="tab"]').click(function(e) {
@@ -78,12 +81,12 @@ $(document).ready(function() {
         }
     });
 
-    // Toggle wether to show already seen episodes
+    // Toggle whether to show already seen episodes
     $('#hidewatched').click(function(e) {
         e.preventDefault();
         hideWatched = $(this).toggleClass('active').hasClass('active')?1:0;
         $(this).text(hideWatched?' Show Watched':' Hide Watched');
-        $(this).prepend('<i class="icon-eye-open"></i>');
+        $(this).prepend('<i class="fa fa-eye"></i>');
         $.get(WEBDIR + 'settings?kodi_hide_watched='+hideWatched);
         reloadTab();
     });
@@ -141,7 +144,7 @@ $(document).ready(function() {
     });
 
     // Filter on searchfield changes
-    $(".search").on('input', function (e) {
+    $(".search").on('keyup', function (e) {
         searchString = $(this).val();
         reloadTab()
     });
@@ -165,6 +168,9 @@ function loadMovies(options) {
     var optionstr = JSON.stringify(options) + hideWatched + JSON.stringify(sorting);
     if (movieLoad.options != optionstr) {
         movieLoad.last = 0;
+        $('#movie-grid').empty();
+    }
+    if (movieLoad.last == 0) {
         $('#movie-grid').empty();
     }
     movieLoad.options = optionstr;
@@ -207,15 +213,15 @@ function loadMovies(options) {
 
                     var src = 'holder.js/100x150/text:No artwork';
                     if (movie.thumbnail != '') {
-                        src = WEBDIR + 'kodi/GetThumb?w=100&h=150&thumb='+encodeURIComponent(movie.thumbnail);
+                        src = WEBDIR + 'kodi/GetThumb?w=225&h=338&thumb='+encodeURIComponent(movie.thumbnail);
                     }
                     movieAnchor.append($('<img>').attr('src', src).addClass('thumbnail'));
 
                     if (movie.playcount >= 1) {
-                        movieAnchor.append($('<i>').attr('title', 'Watched').addClass('icon-white icon-ok-sign watched'));
+                        movieAnchor.append($('<i>').attr('title', 'Watched').addClass('fa fa-check-circle fa-inverse watched'));
                     }
 
-                    movieAnchor.append($('<h6>').addClass('title').html(shortenText(movie.title, 12)));
+                    movieAnchor.append($('<h6>').addClass('title').html(shortenText(movie.title, 16)));
 
                     movieItem.append(movieAnchor);
 
@@ -249,7 +255,7 @@ function loadMovie(movie) {
     if (movie.rating) {
         info.append($('<span>').raty({
             readOnly: true,
-            path: WEBDIR + 'img',
+            path: null,
             score: (movie.rating / 2),
         }));
     }
@@ -290,7 +296,53 @@ function loadMovie(movie) {
         info
     ), buttons);
     $('.modal-fanart').css({
-        'background-image' : 'url('+WEBDIR+'kodi/GetThumb?w=675&h=400&o=10&thumb='+encodeURIComponent(movie.fanart)+')'
+        'background-image' : 'url(' + WEBDIR + 'kodi/GetThumb?w=675&h=400&o=10&thumb='+encodeURIComponent(movie.fanart)+')'
+    });
+}
+
+function loadEpisode(episode) {
+    var poster = WEBDIR + 'kodi/GetThumb?w=200&h=300&thumb='+encodeURIComponent(episode.thumbnail)
+    var info = $('<div>').addClass('modal-episodeinfo');
+    if (episode.streamdetails && episode.streamdetails.video[0]) {
+        var runtime = parseSec(episode.streamdetails.video[0].duration);
+        info.append($('<p>').html('<b>Runtime: </b> ' + runtime));
+    }
+    info.append($('<p>').html('<b>Plot: </b> ' + episode.plot));
+    if (episode.genre) {
+        var genre = episode.genre.join(', ');
+        info.append($('<p>').html('<b>Genre: </b> ' + genre));
+    }
+    if (episode.playcount) {
+        info.append($('<p>').html('<b>Seen: </b>' + episode.playcount + ' times'))
+    }
+    if (episode.file) {
+        info.append($('<p>').html('<b>File: </b>' + episode.file))
+    }
+
+    if (episode.studio) {
+        var studio = episode.studio.join(', ');
+        info.append($('<p>').html('<b>Studio: </b> ' + studio));
+    }
+    if (episode.rating) {
+        info.append($('<span>').raty({
+            readOnly: true,
+            path: null,
+            score: (episode.rating / 2),
+        }));
+    }
+    var buttons = {
+        'Play' : function() {
+            playItem(episode.episodeid, 'episode');
+            hideModal();
+        }
+    }
+
+    showModal(episode.label,  $('<div>').append(
+        $('<img>').attr('src', poster).addClass('thumbnail episode-poster pull-left'), info),
+        buttons);
+
+    $('.modal-fanart').css({
+        'background-image' : 'url('+WEBDIR+'kodi/GetThumb?w=675&h=400&o=10&thumb='+encodeURIComponent(episode.thumbnail)+')'
     });
 }
 
@@ -304,6 +356,9 @@ function loadShows(options) {
     var optionstr = JSON.stringify(options) + hideWatched + JSON.stringify(sorting);
     if (showLoad.options != optionstr) {
         showLoad.last = 0;
+        $('#show-grid').empty();
+    }
+    if (showLoad.last == 0) {
         $('#show-grid').empty();
     }
     showLoad.options = optionstr;
@@ -340,7 +395,7 @@ function loadShows(options) {
                     var showItem = $('<li>').attr('title', show.title);
 
                     var showAnchor = $('<a>').attr('href', '#tvshow-' + show.tvshowid).click(function(e) {
-                        // e.preventDefault();
+                        e.preventDefault();
                         loadEpisodes({'tvshowid':show.tvshowid})
                     });
 
@@ -351,10 +406,10 @@ function loadShows(options) {
                     showAnchor.append($('<img>').attr('src', src).addClass('thumbnail'));
 
                     if (show.playcount >= 1) {
-                        showAnchor.append($('<i>').attr('title', 'Watched').addClass('icon-white icon-ok-sign watched'));
+                        showAnchor.append($('<i>').attr('title', 'Watched').addClass('fa fa-check-circle fa-inverse watched'));
                     }
 
-                    showAnchor.append($('<h6>').addClass('title').html(shortenText(show.title, 11)));
+                    showAnchor.append($('<h6>').addClass('title').html(shortenText(show.title, 16)));
 
                     showItem.append(showAnchor);
 
@@ -381,6 +436,9 @@ function loadEpisodes(options) {
     var optionstr = JSON.stringify(options) + hideWatched;
     if (episodeLoad.options != optionstr) {
         episodeLoad.last = 0;
+        $('#episode-grid').empty();
+    }
+    if (episodeLoad.last == 0) {
         $('#episode-grid').empty();
     }
     episodeLoad.options = optionstr;
@@ -421,12 +479,12 @@ function loadEpisodes(options) {
 
                     var src = 'holder.js/150x85/text:No artwork';
                     if (episode.thumbnail != '') {
-                        src = WEBDIR + 'kodi/GetThumb?w=150&h=85&thumb='+encodeURIComponent(episode.thumbnail);
+                        src = WEBDIR + 'kodi/GetThumb?w=375&h=210&thumb='+encodeURIComponent(episode.thumbnail);
                     }
                     episodeAnchor.append($('<img>').attr('src', src).addClass('thumbnail'));
 
                     if (episode.playcount >= 1) {
-                        episodeAnchor.append($('<i>').attr('title', 'Watched').addClass('icon-white icon-ok-sign watched'));
+                        episodeAnchor.append($('<i>').attr('title', 'Watched').addClass('fa fa-check-circle fa-inverse watched-episode'));
                     }
 
                     episodeAnchor.append($('<h6>').addClass('title').html(shortenText(episode.label, 18)));
@@ -440,7 +498,7 @@ function loadEpisodes(options) {
         },
         complete: function() {
             $('.spinner').hide();
-            $('a[href=#episodes]').tab('show');
+            $('a[href="#episodes"]').tab('show');
         }
     });
     $('#episode-grid').slideDown()
@@ -482,6 +540,9 @@ function loadArtists(options) {
         artistLoad.last = 0;
         $('#artist-grid').empty();
     }
+    if (artistLoad.last == 0) {
+        $('#artist-grid').empty();
+    }
     artistLoad.options = optionstr;
 
     var active = (artistLoad.request!=null && artistLoad.request.readyState!=4);
@@ -512,11 +573,11 @@ function loadArtists(options) {
                 $.each(data.artists, function (i, artist) {
                     $('#artist-grid').append($('<tr>').append(
                         $('<td>').append(
-                            $('<a>').attr('href','#').attr('title', 'Play all').html('<i class="icon-play">').click(function(e) {
+                            $('<a>').attr('href','#').attr('title', 'Play all').html('<i class="fa fa-play">').click(function(e) {
                                 e.preventDefault();
                                 playItem(artist.artistid, 'artist');
                             }),
-                            $('<a>').attr('href','#').attr('title', 'Enqueue all').html('<i class="icon-plus">').click(function(e) {
+                            $('<a>').attr('href','#').attr('title', 'Enqueue all').html('<i class="fa fa-plus">').click(function(e) {
                                 e.preventDefault();
                                 queueItem(artist.artistid, 'artist');
                             })
@@ -649,6 +710,9 @@ var songsLoad = {
 }
 function loadSongs(options) {
     searchString = $('.search').val()
+    if (songLoad.last == 0) {
+        $('#songs-grid tbody').empty();
+    }
     if (options != undefined || searchString != songsLoad.filter) {
         songsLoad.last = 0
         $('#songs-grid tbody').empty()
@@ -693,7 +757,7 @@ function loadSongs(options) {
                     var row = $('<tr>');
                     row.append(
                         $('<td>').append(
-                            $('<a>').attr('href','#').append($('<i>').addClass('icon-plus')).click(function(e) {
+                            $('<a>').attr('href','#').append($('<i>').addClass('fa fa-plus')).click(function(e) {
                                 e.preventDefault();
                                 queueItem(song.songid, 'song')
                             }),
@@ -721,7 +785,7 @@ function loadSongs(options) {
             }
         },
         complete: function() {
-            $('a[href=#songs]').tab('show');
+            $('a[href="#songs"]').tab('show');
             $('.spinner').hide();
         }
     });
@@ -772,7 +836,7 @@ function loadNowPlaying() {
         success: function(data) {
             if (data == null) {
                 $('#nowplaying').hide();
-                $('a[href=#playlist]').parent().hide();
+                $('a[href="#playlist"]').parent().hide();
                 return;
             }
             if (nowPlayingId != data.itemInfo.item.id) {
@@ -785,7 +849,7 @@ function loadNowPlaying() {
                 } else {
                     switch(data.itemInfo.item.type) {
                         case 'episode':
-                            thumbnail.attr('src', WEBDIR + 'kodi/GetThumb?w=150&h=75&thumb='+nowPlayingThumb);
+                            thumbnail.attr('src', WEBDIR + 'kodi/GetThumb?w=150&h=100&thumb='+nowPlayingThumb);
                             thumbnail.attr('width', '150').attr('height', '75');
                             break;
                         case 'movie':
@@ -801,22 +865,22 @@ function loadNowPlaying() {
                             thumbnail.attr('width', '140').attr('height', '140');
                     }
                 }
-                if (data.itemInfo.item.fanart) {
+                /*if (data.itemInfo.item.fanart) {
                     var background = encodeURIComponent(data.itemInfo.item.fanart)
                     background = WEBDIR + 'kodi/GetThumb?w=1150&h=640&o=10&thumb='+background;
                     $('#nowplaying').css({'background-image':'url('+background+')'});
-                }
+                }*/
             }
 
             if (data.playerInfo.speed == 1) {
-                $('#nowplaying i.icon-play').removeClass().addClass('icon-pause')
+                $('#nowplaying i.icon-play').removeClass().addClass('fa fa-pause')
             } else {
-                $('#nowplaying i.icon-pause').removeClass().addClass('icon-play')
+                $('#nowplaying i.icon-pause').removeClass().addClass('fa fa-play')
             }
             if (data.app.muted) {
-                $('#nowplaying i.icon-volume-up').removeClass().addClass('icon-volume-off')
+                $('#nowplaying i.icon-volume-up').removeClass().addClass('fa fa-volume-off')
             } else {
-                $('#nowplaying i.icon-volume-off').removeClass().addClass('icon-volume-up')
+                $('#nowplaying i.icon-volume-off').removeClass().addClass('fa fa-volume-up')
             }
 
             var playingTime = pad(data.playerInfo.time.hours, 2) + ':' +
@@ -912,7 +976,7 @@ function loadPlaylist(type){
                 playlist.html('<tr><td colspan="4">Playlist is empty</td></tr>');
                 return;
             }
-            $('a[href=#playlist]').parent().show();
+            $('a[href="#playlist"]').parent().show();
 
             $.each(data.items, function(i, item){
                 var listItem = $('<tr>').attr('title',item.title).click(function(e) {
@@ -927,7 +991,7 @@ function loadPlaylist(type){
                 if (item.type == 'song') {
                     listItem.append(
                         $('<td>').html(shortenText(item.title,90)).prepend(
-                            $('<i>').addClass('remove icon-remove').click(function(e) {
+                            $('<i>').addClass('fa fa-times remove').click(function(e) {
                                 e.stopPropagation();
                                 removeItem(i);
                                 nowPlaying = null;
@@ -936,7 +1000,7 @@ function loadPlaylist(type){
                         $('<td>').html(item.artist[0]),
                         $('<td>').html(item.album),
                         $('<td>').html(parseSec(item.duration)),
-                        $('<td>').append($('<i>').addClass('handle icon-align-justify'))
+                        $('<td>').append($('<i>').addClass('fa fa-align-justify handle'))
                     );
                 } else {
                     var label = item.label + ' (' + item.year + ')';
@@ -1021,14 +1085,14 @@ function GetAddons() {
                         loadAddons(addon);
                     });
                     var src = 'holder.js/100x150/text:No artwork';
-                    if (addon.thumbnail !== '') {
+                    if (addon.thumbnail) {
                         src = WEBDIR + 'kodi/GetThumb?w=100&h=150&thumb=' + encodeURIComponent(addon.thumbnail);
                     }
+
                     addonAnchor.append($('<img>').attr('src', src).addClass('thumbnail'));
-                    addonAnchor.append($('<h6>').addClass('title').html(shortenText(addon.name, 11)));
+                    addonAnchor.append($('<h6>').addClass('title').html(shortenText(addon.name, 17)));
                     row.append(addonAnchor);
                     $('#addons-grid').append(row);
-
                 });
                 $('.spinner').hide();
                 Holder.run();
@@ -1098,21 +1162,27 @@ function reloadTab() {
     options = {'filter': searchString}
 
     if ($('#movies').is(':visible')) {
+        $('.search').attr('placeholder', "Search movies")
         loadMovies(options);
     } else if ($('#shows').is(':visible')) {
+        $('.search').attr('placeholder', "Search shows")
         loadShows(options);
     } else if ($('#episodes').is(':visible')) {
         options = $.extend(options, {'tvshowid': currentShow});
         loadEpisodes(options);
     } else if ($('#artists').is(':visible')) {
+        $('.search').attr('placeholder', "Search artists")
         loadArtists(options);
     } else if ($('#albums').is(':visible')) {
+        $('.search').attr('placeholder', "Search albums")
         loadAlbums(options);
     } else if ($('#songs').is(':visible')) {
+        $('.search').attr('placeholder', "Search songs")
         loadSongs();
     } else if ($('#pvr').is(':visible')) {
         loadChannels();
     } else if ($('#addons').is(':visible')) {
+        $('.search').attr('placeholder', "Search")
         GetAddons();
     }
 }

@@ -1,14 +1,14 @@
 
 $("#qbt_rp_icon").click(function () {
-    if ($("#qbt_rp_icon").hasClass("icon-play")) {
+    if ($("#qbt_rp_icon").hasClass("fa fa-play")) {
         $.get(WEBDIR+'qbittorrent/command/resumeall');
         notify('Resume', 'all torrents', 'info');
-        $('#qbt_rp_icon').removeClass("icon-play").addClass("icon-pause");
+        $('#qbt_rp_icon').removeClass("fa fa-play").addClass("fa fa-pause");
         get_torrents();
     } else {
         $.get(WEBDIR + 'qbittorrent/command/pauseall');
         notify('Pause', 'all torrents', 'info');
-        $('#qbt_rp_icon').removeClass("icon-pause").addClass("icon-play");
+        $('#qbt_rp_icon').removeClass("fa fa-pause").addClass("fa fa-play");
         get_torrents();
     }
 });
@@ -33,18 +33,20 @@ function get_torrents() {
                     times_in += 1;
                 }
 
-
                 var progressBar = $('<div>');
                 progressBar.addClass('bar');
                 progressBar.css('width', (torrent.progress * 100) + '%');
-                progressBar.text(torrent.size);
+
 
                 var progress = $('<div>');
                 progress.addClass('progress');
                 if (torrent.percentage_done >= 1) {
                     progress.addClass('progress-success');
                 }
+
+                var sp = $('<span>').text(torrent.size)
                 progress.append(progressBar);
+                progress.append(sp)
 
                 // Button group
                 buttons = $('<div>').addClass('btn-group');
@@ -56,16 +58,18 @@ function get_torrents() {
 
                 // Remove button
                 removeButton = $('<a class="qbt_removetorrent" data-action="delete" data-hash="" data-name="">').
-                addClass('btn btn-mini').
-                html('<i class="icon-remove"></i>').
-                attr('data-hash', torrent.hash).
-                attr('data-name', torrent.name).
-                attr('title', 'Remove torrent');
+                    addClass('btn btn-mini').
+                    html('<i class="fa fa-trash-o fa-lg"></i>').
+                    attr('data-hash', torrent.hash).
+                    attr('data-name', torrent.name).
+                    attr('title', 'Remove torrent');
                 buttons.append(removeButton);
 
                 tr.append(
 
-                $('<td>').addClass('qbt_name').html(torrent.name + '<br><small><i class="icon-long-arrow-down"></i> ' + torrent.dlspeed + '<i class="icon-long-arrow-up"></i> ' + torrent.upspeed + '</small>'),
+                $('<td>').addClass('qbt_name').text(torrent.name),
+                $('<td>').text(torrent.dlspeed),
+                $('<td>').text(torrent.upspeed),
                 $('<td>').text(torrent.num_seeds),
                 $('<td>').text(torrent.num_leechs),
                 $('<td>').addClass('qbt_ratio').text(torrent.ratio),
@@ -76,11 +80,12 @@ function get_torrents() {
                 $('#torrents-queue').append(tr);
             });
             if (times_in === numberofloop) {
-                $("#qbt_rp_icon").removeClass("icon-pause").addClass("icon-play");
+                $("#qbt_rp_icon").removeClass("fa fa-pause").addClass("fa fa-play");
             } else {
-                $("#qbt_rp_icon").removeClass("icon-play").addClass("icon-pause");
+                $("#qbt_rp_icon").removeClass("fa fa-play").addClass("fa fa-pause");
             }
             $('.spinner').hide();
+            $('#torrents-queue').parent().trigger('update');
 
         }
     });
@@ -105,11 +110,11 @@ function generateTorrentActionButton(torrent) {
     var icon = cmd = title = "";
 
     if (status == "pausedUP" || status == "pausedDL" || status == "error" || status == "checkingUP") {
-        icon = "icon-play";
+        icon = "fa fa-play";
         title = "Resume torrent";
         cmd = "resume";
     } else {
-        icon = "icon-pause";
+        icon = "fa fa-pause";
         title = "Pause torrent";
         cmd = "pause";
     }
@@ -135,10 +140,10 @@ $(document).on('click', '.qbt_removetorrent', function () {
 
 // resume/pause all torrents
 $(document).on('click', '.qbt_rp', function () {
-    if ($(this).children("i").hasClass("icon-play")) {
-        ($(this).children("i").removeClass("icon-play").addClass("icon-pause"));
+    if ($(this).children("i").hasClass("fa fa-play")) {
+        ($(this).children("i").removeClass("fa fa-play").addClass("fa fa-pause"));
     } else {
-        ($(this).children("i").removeClass("icon-pause").addClass("icon-play"));
+        ($(this).children("i").removeClass("fa fa-pause").addClass("fa fa-play"));
     }
     var action = $(this).attr('data-action');
     var name = $(this).attr('data-name')
@@ -180,14 +185,17 @@ function get_global_limit() {
 // Loads the moduleinfo
 $(document).ready(function () {
     $('.spinner').show();
+    // to kick off tablesorter
+    $(window).trigger('hashchange')
     get_torrents();
     get_speed();
     get_global_limit();
+
     setInterval(function () {
-        get_torrents();
-        get_speed();
-        get_global_limit();
-    }, 4000);
+        //get_torrents();
+        //get_speed();
+        //get_global_limit();
+    }, 10000);
 
 });
 

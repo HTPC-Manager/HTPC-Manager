@@ -3,11 +3,11 @@
 
 import cherrypy
 import htpc
-from urllib import quote
-from urllib2 import urlopen
+from urllib.parse import quote
+from urllib.request import urlopen
 from json import loads
 import logging
-from cherrypy.lib.auth2 import require
+from htpc.auth2 import require, member_of
 from htpc.helpers import fix_basepath, striphttp
 
 
@@ -26,7 +26,7 @@ class Sabnzbd(object):
                 {'type': 'text', 'label': 'Basepath', 'name': 'sabnzbd_basepath'},
                 {'type': 'text', 'label': 'API key', 'name': 'sabnzbd_apikey'},
                 {'type': 'bool', 'label': 'Use SSL', 'name': 'sabnzbd_ssl'},
-                {'type': 'text', 'label': 'Reverse proxy link', 'placeholder': '', 'desc':'Reverse proxy link ex: https://sab.domain.com', 'name': 'sabnzbd_reverse_proxy_link'},
+                {'type': 'text', 'label': 'Reverse proxy link', 'placeholder': '', 'desc': 'Reverse proxy link, e.g. https://sab.domain.com', 'name': 'sabnzbd_reverse_proxy_link'},
 
             ]
         })
@@ -37,7 +37,7 @@ class Sabnzbd(object):
         return htpc.LOOKUP.get_template('sabnzbd.html').render(scriptname='sabnzbd', webinterface=self.webinterface())
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_admin))
     @cherrypy.tools.json_out()
     def version(self, sabnzbd_host, sabnzbd_basepath, sabnzbd_port, sabnzbd_apikey, sabnzbd_ssl=False, **kwargs):
         self.logger.debug('Fetching version information from sabnzbd')
@@ -96,37 +96,43 @@ class Sabnzbd(object):
         return self.fetch('&mode=warnings')
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     @cherrypy.tools.json_out()
-    def TogglePause(self, mode=''):
-        self.logger.debug('Pausing')
+    def TogglePause(self, mode='', time=''):
+        print(( mode, time ))
+        if time:
+            self.logger.debug('Pausing for %s minutes' % time)
+            return self.fetch('&mode=config&name=set_pause&value=' + time)
         return self.fetch('&mode=' + mode)
 
     @cherrypy.expose()
     @require()
     @cherrypy.tools.json_out()
-    def AddNzbFromUrl(self, nzb_url, nzb_category=''):
+    def AddNzbFromUrl(self, nzb_url, nzb_category='', nzb_name=''):
         self.logger.debug('Adding nzb from url')
+        self.logger.debug('%s %s %s' % (quote(nzb_url), nzb_category, nzb_name))
+        if 'api.nzbgeek.info' in nzb_url:
+            nzb_url = nzb_url.replace('amp;', '')
         if nzb_category:
             nzb_category = '&cat=' + nzb_category
-        return self.fetch('&mode=addurl&name=' + quote(nzb_url) + nzb_category)
+        return self.fetch('&mode=addurl&name=' + quote(nzb_url) + nzb_category + '&priority=2')
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     @cherrypy.tools.json_out()
     def DeleteNzb(self, id):
         self.logger.debug('Deleting nzb')
         return self.fetch('&mode=queue&name=delete&value=' + id)
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     @cherrypy.tools.json_out()
     def DeleteHistory(self, id):
         self.logger.debug('Deleting history')
         return self.fetch('&mode=history&name=delete&value=' + id)
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     @cherrypy.tools.json_out()
     def Retry(self, id):
         self.logger.debug('Retry download')
@@ -140,21 +146,21 @@ class Sabnzbd(object):
         return self.fetch('&mode=get_cats')
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     @cherrypy.tools.json_out()
     def ChangeCategory(self, id, cat):
         self.logger.debug('Changing category of download')
         return self.fetch('&mode=change_cat&value=' + id + '&value2=' + cat)
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     @cherrypy.tools.json_out()
     def SetSpeed(self, speed):
         self.logger.debug('Setting speed-limit')
         return self.fetch('&mode=config&name=speedlimit&value=' + speed)
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     @cherrypy.tools.json_out()
     def Swap(self, v1, v2):
         self.logger.debug('Swaping nzb position to %s' % v2)
@@ -169,7 +175,7 @@ class Sabnzbd(object):
             ssl = 's' if htpc.settings.get('sabnzbd_ssl', 0) else ''
 
             url = 'http%s://%s:%s%sapi?output=json&apikey=%s%s' % (ssl, host, port, sabnzbd_basepath, apikey, path)
-            self.logger.debug('Fetching information from: ' + url)
+            self.logger.debug('Fetching information from: %s' % url)
             return loads(urlopen(url, timeout=10).read(), strict=False)
         except Exception as e:
             self.logger.error('Cannot contact sabnzbd %s' % e)

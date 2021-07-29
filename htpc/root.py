@@ -10,9 +10,10 @@ import sys
 import cherrypy
 import htpc
 import logging
-import urllib
+from urllib.parse import unquote
 from threading import Thread
-from cherrypy.lib.auth2 import *
+from htpc.auth2 import *
+from htpc.helpers import serve_template
 
 
 def do_restart():
@@ -20,17 +21,18 @@ def do_restart():
     arguments.insert(0, sys.executable)
     if sys.platform == 'win32':
         arguments = ['"%s"' % arg for arg in arguments]
+
     os.chdir(os.getcwd())
     # Fix for rotation logs on windows
     logging.shutdown()
     os.execv(sys.executable, arguments)
 
 
-class RestrictedArea:
+class RestrictedArea(object):
     # all methods in this controller (and subcontrollers) is
     # open only to members of the admin group
     _cp_config = {
-        'auth.require': [member_of('admin')]
+        'auth.require': [member_of(htpc.role_admin)]
     }
 
 
@@ -56,10 +58,10 @@ class Root(object):
         return "An error occured"
 
     @cherrypy.expose()
-    @require(member_of("admin"))
+    @require(member_of(htpc.role_admin))
     def shutdown(self):
         """ Shutdown CherryPy and exit script """
-        self.logger.info("Shutting down htpc-manager.")
+        self.logger.info("Shutting down HTPC Manager.")
         cherrypy.engine.exit()
         # Fix for rotation logs on windows
         logging.shutdown()
@@ -76,10 +78,10 @@ class Root(object):
 
     @cherrypy.tools.json_out()
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_admin))
     def restart(self):
         """ Shutdown script and rerun with the same variables """
-        self.logger.info("Restarting htpc-manager.")
+        self.logger.info("Restarting HTPC Manager.")
         Thread(target=do_restart).start()
         return "Restart in progress."
 
@@ -87,7 +89,7 @@ class Root(object):
     @require()
     def logout(self, from_page="/"):
         sess = cherrypy.session
-        username = sess.get(SESSION_KEY, None)
+        username = sess.get(SESSION_KEY)
         sess[SESSION_KEY] = None
         if username:
             cherrypy.request.login = None
@@ -95,14 +97,24 @@ class Root(object):
 
     @cherrypy.tools.json_out()
     @cherrypy.expose()
-    @require(member_of("admin"))
+    @require(member_of(htpc.role_admin))
     def save_dash(self, dash_order=0):
-        htpc.settings.set("dash_order", urllib.unquote(dash_order).decode('utf-8'))
+        htpc.settings.set("dash_order", unquote(dash_order))
         return "Dashboard saved."
 
     @cherrypy.tools.json_out()
     @cherrypy.expose()
-    @require(member_of("admin"))
+    @require(member_of(htpc.role_admin))
     def save_menu(self, menu_order=0):
-        htpc.settings.set("menu_order", urllib.unquote(menu_order).decode('utf-8'))
+        htpc.settings.set("menu_order", unquote(menu_order))
         return "Menu order saved."
+
+    @cherrypy.expose()
+    @require()
+    def iframe(self, link='', **kwargs):
+        return serve_template('iframe.html', scriptname='iframe', link=link)
+
+    @cherrypy.expose()
+    @require()
+    def about(self):
+        return htpc.LOOKUP.get_template('about.html').render(scriptname='about')

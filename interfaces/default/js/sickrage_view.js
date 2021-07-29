@@ -1,7 +1,7 @@
 $(document).ready(function() {
     var showid = $('h1.page-title').attr('data-showid');
     loadShowData(showid);
-    $('#banner').css('background-image', 'url(' + WEBDIR + 'sickrage/GetBanner/' + showid + ')');
+    $('#banner').css('background-image', 'url(' + WEBDIR + 'sickrage/GetBanner?indexerid=' + showid + ')');
     $('.spinner').show();
 });
 
@@ -141,13 +141,13 @@ function renderSeason() {
                 buttons = $('<div>').addClass('btn-group');
 
                 var search_link = $('<a>').addClass('btn btn-mini').attr('title',
-                    'Search new download').append($('<i>').addClass('icon-search')).on(
+                    'Search new download').append($('<i>').addClass('fa fa-search')).on(
                     'click', function() {
                         searchEpisode(showid, season, index, value.name);
                     });
 
                 var search_subs = $('<a>').addClass('btn btn-mini').attr('title',
-                    'Search subtitle').append($('<i>').addClass('icon-comment')).on('click',
+                    'Search subtitle').append($('<i>').addClass('fa fa-comment')).on('click',
                     function() {
                         searchsub(showid, season, index, value.name);
                     });
@@ -160,7 +160,7 @@ function renderSeason() {
                 var has_sub = ""
                     // value subtitles is a empty string if there isnt a sub, else subs language code "en" etc
                 if (value.subtitles.length > 0) {
-                    has_sub = makeIcon('icon-comment', value.subtitles);
+                    has_sub = makeIcon('fa fa-comment', value.subtitles);
                 }
 
                 row.append(
@@ -193,10 +193,10 @@ function renderSeason() {
 }
 
 function sickrageStatusLabel(text) {
-    var statusOK = ['Continuing', 'Downloaded', 'HD', 'HD720p', 'HD1080p', 'HD TV', '720p WEB-DL', '1080p WEB-DL'];
-    var statusInfo = ['Snatched'];
-    var statusError = ['Ended'];
-    var statusWarning = ['Skipped'];
+    var statusOK = ['Continuing', 'Downloaded', 'HD', 'HDTV', 'HD720p', 'HD1080p', '720p HDTV', '1080p HDTV', '720p WEB-DL', '1080p WEB-DL', '720p BluRay', '1080p BluRay'];
+    var statusInfo = ['Snatched', 'Snatched (Best)', 'Snatched (Proper)'];
+    var statusError = ['Ended', 'SD'];
+    var statusWarning = ['Skipped', 'Custom', 'Unknown'];
 
     var label = $('<span>').addClass('label').text(text);
 
@@ -226,17 +226,17 @@ function sickrageStatusIcon(iconText, white) {
         'Archived',
         'Skipped'];
     var icons = [
-        'icon-download-alt',
-        'icon-repeat',
-        'icon-share-alt',
-        'icon-time',
-        'icon-lock',
-        'icon-fast-forward'];
+        'fa fa-download',
+        'fa fa-rotate-right',
+        'fa fa-share-alt',
+        'fa fa-clock-o',
+        'fa fa-lock',
+        'fa fa-fast-forward'];
 
     if (text.indexOf(iconText) != -1) {
         var icon = $('<i>').addClass(icons[text.indexOf(iconText)]);
         if (white == true) {
-            icon.addClass('icon-white');
+            icon.addClass('fa-inverse');
         }
         return icon;
     }
@@ -244,7 +244,7 @@ function sickrageStatusIcon(iconText, white) {
 }
 
 
-// Not in use atm. Needs to a edit show to the api. and add more stuff from sb.show cmd.
+// Not in use atm. Needs to add edit show to the api and add more stuff from sb.show cmd.
 function loadShow(data) {
     var table = $('<table>');
     table.addClass('table table-bordered table-striped table-condensed');
@@ -350,7 +350,7 @@ function loadShow(data) {
 
     modalContent = $('<div>');
     modalContent.append(
-        $('<img>').attr('src', WEBDIR + 'sickrage/GetBanner/' + data.indexerid).addClass('img-rounded'),
+        $('<img>').attr('src', WEBDIR + 'sickrage/GetBanner/?indexerid=' + data.indexerid).addClass('img-rounded'),
         $('<br>'),
         table);
 
@@ -531,3 +531,5 @@ function delete_show(tvshow) {
         }, 2500);
     }
 }
+
+$("[type='checkbox']").bootstrapSwitch();

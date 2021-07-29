@@ -11,8 +11,7 @@ import sys
 import htpc
 import webbrowser
 import locale
-from threading import Thread
-import logging
+import importlib
 
 
 def parse_arguments():
@@ -27,22 +26,22 @@ def parse_arguments():
                         help='Use a specific host/IP')
     parser.add_argument('--port', type=int,
                         help='Use a specific port')
-    parser.add_argument('--shell', action='store_true', default=False,
-                        help='WARNING! DO NOT USE UNLESS YOU KNOW WHAT .POPEN CAN BE USED FOR (LIKE WIPING YOUR HARDDRIVE).')
     parser.add_argument('--daemon', action='store_true', default=False,
                         help='Daemonize process')
     parser.add_argument('--pid', default=False,
                         help='Generate PID file at location')
-    parser.add_argument('--debug', action='store_true', default=False,
-                        help='Used while developing, prints debug messages uncensored and more..')
+    parser.add_argument('--dev', action='store_true', default=False,
+                        help='Used while developing, prints debug messages uncensored, autoreload etc')
     parser.add_argument('--openbrowser', action='store_true', default=False,
                         help='Open the browser on server start')
     parser.add_argument('--webdir', default=None,
                         help='Use a custom webdir')
     parser.add_argument('--resetauth', action='store_true', default=False,
-                        help='Resets the username and password to HTPC-Manager')
-    parser.add_argument('--loglevel', default='info',
+                        help='Resets the username and password to HTPC Manager')
+    parser.add_argument('--loglevel',
                         help='Set a loglevel. Allowed values: debug, info, warning, error, critical')
+    parser.add_argument('--nocolor', action='store_true', default=False,
+                        help='Disable colored terminal text')
     return parser.parse_args()
 
 
@@ -72,8 +71,8 @@ def load_modules():
     htpc.ROOT.deluge = Deluge()
     from modules.squeezebox import Squeezebox
     htpc.ROOT.squeezebox = Squeezebox()
-    from modules.search import Search
-    htpc.ROOT.search = Search()
+    from modules.newznab import Newznab
+    htpc.ROOT.newznab = Newznab()
     from modules.utorrent import UTorrent
     htpc.ROOT.utorrent = UTorrent()
     from modules.nzbget import NZBGet
@@ -92,6 +91,8 @@ def load_modules():
     htpc.ROOT.users = Users()
     from modules.sonarr import Sonarr
     htpc.ROOT.sonarr = Sonarr()
+    from modules.radarr import Radarr
+    htpc.ROOT.radarr = Radarr()
     from modules.sickrage import Sickrage
     htpc.ROOT.sickrage = Sickrage()
     from modules.samsungtv import Samsungtv
@@ -100,11 +101,17 @@ def load_modules():
     htpc.ROOT.vnstat = Vnstat()
     from modules.headphones import Headphones
     htpc.ROOT.headphones = Headphones()
-
+    from modules.mylar import Mylar
+    htpc.ROOT.mylar = Mylar()
+    from modules.rtorrent import RTorrent
+    htpc.ROOT.rtorrent = RTorrent()
+    from modules.plexpy import Plexpy
+    htpc.ROOT.plexpy = Plexpy()
+    from modules.ombi import Ombi
+    htpc.ROOT.ombi = Ombi()
 
 def init_sched():
     from apscheduler.schedulers.background import BackgroundScheduler
-    from apscheduler.triggers.interval import IntervalTrigger
     htpc.SCHED = BackgroundScheduler()
     htpc.SCHED.start()
 
@@ -120,8 +127,6 @@ def main():
     htpc.RUNDIR = os.path.dirname(os.path.abspath(sys.argv[0]))
     sys.path.insert(0, os.path.join(htpc.RUNDIR, 'libs'))
 
-    htpc.SYS_ENCODING = None
-
     try:
         locale.setlocale(locale.LC_ALL, "")
         htpc.SYS_ENCODING = locale.getpreferredencoding()
@@ -133,15 +138,14 @@ def main():
         htpc.SYS_ENCODING = 'UTF-8'
 
     if not hasattr(sys, "setdefaultencoding"):
-            reload(sys)
+            importlib.reload(sys)
 
-    # python 2.7.9 verifies certs by default. This disables it
-    if sys.version_info >= (2, 7, 9):
-        import ssl
-        ssl._create_default_https_context = ssl._create_unverified_context
+    # Since python 2.7.9 certs are verified by default. This disables it
+    import ssl
+    ssl._create_default_https_context = ssl._create_unverified_context
 
     # Set datadir, create if it doesn't exist and exit if it isn't writable.
-    htpc.DATADIR = os.path.join(htpc.RUNDIR, 'userdata/')
+    htpc.DATADIR = os.path.join(htpc.RUNDIR, 'userdata')
     if args.datadir:
         htpc.DATADIR = args.datadir
     if not os.path.isdir(htpc.DATADIR):
@@ -149,13 +153,15 @@ def main():
     if not os.access(htpc.DATADIR, os.W_OK):
         sys.exit("No write access to userdata folder")
 
+    htpc.SCRIPTDIR = os.path.join(htpc.DATADIR, 'scripts')
+
+    if not os.path.isdir(htpc.SCRIPTDIR):
+        os.makedirs(htpc.SCRIPTDIR)
+
     from mako.lookup import TemplateLookup
 
-    # Enable debug mode if needed
-    htpc.DEBUG = args.debug
-
-    # Set loglevel
-    htpc.LOGLEVEL = args.loglevel.lower()
+    # Enable dev mode if needed
+    htpc.DEV = args.dev
 
     # Set default database and overwrite if supplied through commandline
     htpc.DB = os.path.join(htpc.DATADIR, 'database.db')
@@ -165,6 +171,12 @@ def main():
     # Load settings from database
     from htpc.settings import Settings
     htpc.settings = Settings()
+
+    # Set default loglevel
+    htpc.LOGLEVEL = htpc.settings.get('app_loglevel', 'info')
+    if args.loglevel:
+        htpc.LOGLEVEL = args.loglevel.lower()
+        htpc.settings.set('app_loglevel', args.loglevel.lower())
 
     # Check for SSL
     htpc.USE_SSL = htpc.settings.get('app_use_ssl')
@@ -179,12 +191,6 @@ def main():
         htpc.WEBDIR = '/' + htpc.WEBDIR
     if not htpc.WEBDIR.endswith('/'):
         htpc.WEBDIR += '/'
-
-    # Initialize Scheduler
-    init_sched()
-
-    # Inititialize root and settings page
-    load_modules()
 
     htpc.TEMPLATE = os.path.join(htpc.RUNDIR, 'interfaces/',
                                  htpc.settings.get('app_template', 'default'))
@@ -214,9 +220,11 @@ def main():
         htpc.USERNAME = htpc.settings.set('app_username', '')
         htpc.PASSWORD = htpc.settings.set('app_password', '')
 
+    htpc.NOCOLOR = args.nocolor
+
     # Open webbrowser
-    if args.openbrowser or htpc.settings.get('openbrowser') and not htpc.DEBUG:
-        browser_ssl = 's' if htpc.SSLCERT and htpc.SSLKEY else ''
+    if args.openbrowser or htpc.settings.get('openbrowser') and not htpc.DEV:
+        browser_ssl = 's' if htpc.SSLCERT and htpc.SSLKEY and htpc.settings.get('app_use_ssl') else ''
         if htpc.settings.get('app_host') == '0.0.0.0':
             browser_host = 'localhost'
         else:
@@ -224,14 +232,19 @@ def main():
         openbrowser = 'http%s://%s:%s%s' % (browser_ssl, str(browser_host), htpc.PORT, htpc.WEBDIR[:-1])
         webbrowser.open(openbrowser, new=2, autoraise=True)
 
-    #Select if you want to controll processes and popen from HTPC-Manager
-    htpc.SHELL = args.shell
-
-    # Select wether to run as daemon
+    # Select whether to run as daemon
     htpc.DAEMON = args.daemon
 
     # Set Application PID
     htpc.PID = args.pid
+
+    # Initialize Scheduler
+    init_sched()
+
+    # Inititialize root and settings page
+    load_modules()
+
+    htpc.ARGS = sys.argv
 
     # Start the server
     from htpc.server import start

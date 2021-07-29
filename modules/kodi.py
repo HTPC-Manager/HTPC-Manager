@@ -7,15 +7,16 @@ import htpc
 import base64
 import socket
 import struct
-from urllib2 import quote
-from urllib2 import unquote
-import urllib
+from urllib.request import urlopen
+from urllib.parse import quote, unquote
 from jsonrpclib import Server
 from sqlobject import SQLObject, SQLObjectNotFound
 from sqlobject.col import StringCol, IntCol
-from htpc.helpers import get_image
+from htpc.helpers import get_image, cachedprime
 import logging
-from cherrypy.lib.auth2 import require
+from htpc.auth2 import require, member_of
+import os
+import hashlib
 import chardet
 from time import sleep
 import xml.etree.ElementTree as ET
@@ -56,9 +57,9 @@ class Kodi(object):
         try: KodiServers.sqlmeta.addColumn(StringCol('vlc_password'), changeSchema=True)
         except Exception, e: pass
         KodiServers.sqlmeta.addColumnsFromDatabase()
-        
+
         htpc.MODULES.append({
-            'name': 'KODI',
+            'name': 'Kodi',
             'id': 'kodi',
             'fields': [
                 {'type': 'bool',
@@ -80,7 +81,7 @@ class Kodi(object):
                 {'type': 'select',
                  'label': 'Use HTML5 player?',
                  'name': 'kodi_vod_html5_mode',
-                 'options': [ 
+                 'options': [
                     {'name': 'Before plugins', 'value': "auto"},
                     {'name': 'After plugins', 'value': "auto_plugin"},
                     {'name': 'Always', 'value': "native"},
@@ -90,7 +91,7 @@ class Kodi(object):
                 {'type': 'select',
                  'label': 'Plugin order',
                  'name': 'kodi_vod_plugin_order',
-                 'options': [ 
+                 'options': [
                     {'name': 'Flash,Silverlight,VLC', 'value': "flash,silverlight,vlc"},
                     {'name': 'Flash,VLC,Silverlight', 'value': "flash,vlc,silverlight"},
                     {'name': 'Silverlight,Flash,VLC', 'value': "silverlight,flash,vlc"},
@@ -102,7 +103,7 @@ class Kodi(object):
                 {'type': 'select',
                  'label': 'Video URL',
                  'name': 'kodi_vod_video_url',
-                 'options': [ 
+                 'options': [
                     {'name': 'User/Pass on video URL', 'value': "plain"},
                     # does not work with VLC web plug-in
                     #{'name': 'Use a redirect', 'value': "redirect", 'selected': 'selected'},
@@ -157,7 +158,7 @@ class Kodi(object):
                 {'type': 'select',
                  'label': 'Muxer',
                  'name': 'kodi_vlc_transcode1_muxer',
-                 'options': [ 
+                 'options': [
                     {'name': 'Ogg', 'value': "ogg"},
                     {'name': 'Webm', 'value': "webm", 'selected': 'selected'},
                     {'name': 'Flv', 'value': "flv"},
@@ -182,7 +183,7 @@ class Kodi(object):
                 {'type': 'select',
                  'label': 'Muxer',
                  'name': 'kodi_vlc_transcode2_muxer',
-                 'options': [ 
+                 'options': [
                     {'name': 'Ogg', 'value': "ogg", 'selected': 'selected'},
                     {'name': 'Webm', 'value': "webm"},
                     {'name': 'Flv', 'value': "flv"},
@@ -208,7 +209,7 @@ class Kodi(object):
                  'label': 'Muxer',
                  'name': 'kodi_vlc_transcode3_muxer',
                  'desc': '<BR><a href="' + htpc.WEBDIR + 'kodi/managevlc">Manage VLC transcode instances</a>',
-                 'options': [ 
+                 'options': [
                     {'name': 'Ogg', 'value': "ogg"},
                     {'name': 'Webm', 'value': "webm"},
                     {'name': 'Flv', 'value': "flv", 'selected': 'selected'},
@@ -223,7 +224,7 @@ class Kodi(object):
         })
 
         htpc.MODULES.append({
-            'name': 'KODI Servers',
+            'name': 'Kodi Servers',
             'id': 'kodi_update_server',
             'action': htpc.WEBDIR + 'kodi/setserver',
             'test': htpc.WEBDIR + 'kodi/ping',
@@ -277,13 +278,13 @@ class Kodi(object):
         })
         server = htpc.settings.get('kodi_current_server', 0)
         self.changeserver(server)
-        
+
     @cherrypy.expose()
     @require()
     def index(self):
         """ Generate page from template """
         return htpc.LOOKUP.get_template('kodi.html').render(scriptname='kodi')
-    
+
     @cherrypy.expose()
     @require()
     def managevlc(self):
@@ -303,7 +304,7 @@ class Kodi(object):
             raise cherrypy.HTTPRedirect(self.url('', False, int(server)) + '/vfs/' + quote(videopath))
         else:
             return
-    
+
     @cherrypy.expose()
     @require()
     def player(self, type=None, id=None, serverID=None, transcode=None, start=None):
@@ -311,16 +312,16 @@ class Kodi(object):
         """ Play a file in Browser """
 
         # get movies/episodes info
-        try: 
+        try:
             serverInfo = KodiServers.selectBy(id=serverID).getOne()
-            
-            url = serverInfo.host + ':' + str(serverInfo.port) 
+
+            url = serverInfo.host + ':' + str(serverInfo.port)
             if serverInfo.username and serverInfo.password:
                 url = serverInfo.username + ':' + serverInfo.password + '@' + url
-            url = 'http://' + url 
-            
+            url = 'http://' + url
+
             kodi = Server(url + '/jsonrpc')
-            
+
             if type == 'movie':
                 properties = ['title', 'year', 'file', 'streamdetails']
                 result = kodi.VideoLibrary.GetMovieDetails(movieid=int(id),properties=properties)
@@ -332,7 +333,7 @@ class Kodi(object):
                 title = result['episodedetails']['showtitle'] + ' (' + str(result['episodedetails']['season']) + 'x' + str(result['episodedetails']['episode']) + ')'
                 rawFile = result['episodedetails']['file']
             else:
-                return 
+                return
 
         except Exception, e:
             self.logger.exception(e)
@@ -352,23 +353,23 @@ class Kodi(object):
 
         if start == None: start = 0
         if transcode == None: transcode = htpc.settings.get('kodi_vlc_default_profile')
-        
+
         if videoSrc == 'plain':
             videoUrl = url + '/vfs/' + quote(rawFile)
         elif videoSrc == 'redirect':
             videoUrl = htpc.WEBDIR + 'kodi/vfs/' + serverID + '/' + quote(rawFile)
         elif videoSrc == 'proxy':
             videoUrl = htpc.settings.get('kodi_vod_proxy') + '/' + quote(rawFile)
-            
+
         #get directory files and fetch subtitles
-        try:  
+        try:
             separator = rawFile.rfind('/') if rawFile.rfind('/') > rawFile.rfind('\\') else rawFile.rfind('\\')
-            path = rawFile[:separator + 1] 
+            path = rawFile[:separator + 1]
             fileList = kodi.Files.GetDirectory(directory=path)
             subtitles=[]
             for files in fileList['files']:
                 x = files['file'].rfind('.')
-                if x: 
+                if x:
                     extension = files['file'][x+1:]
                     if extension in ['smi','sami','dfxp','srt','vtt','ttml','scc']:
                         y = rawFile.rfind('.')
@@ -377,27 +378,27 @@ class Kodi(object):
                                 if y+1 == x: srclang = files['file'][y+1:x]
                                 else: srclang = 'unk'
                                 subtitles.append({'srclang':srclang,'label':srclang.capitalize(),'type':extension,'path':quote(files['file'])})
-                
+
         except Exception, e:
             self.logger.exception(e)
             self.logger.error("Unable to fetch subtitle list")
             return
-        
+
         #vlc stuff
-        if vlcEnabled:   
-            
+        if vlcEnabled:
+
             #set player qualities
-            for x in range(1, 4):            
+            for x in range(1, 4):
                 if htpc.settings.get('kodi_vlc_transcode'+ str(x) +'_enabled'):
                     features = "'quality',"
                     qualities = qualities + "," + str(x) + ":'" + htpc.settings.get('kodi_vlc_transcode'+ str(x) +'_name') + "'"
-            
+
             #transcode if needed
             if int(transcode) > 0 and htpc.settings.get('kodi_vlc_transcode' + str(transcode) + '_enabled'):
-                
+
                 #create a uniqueID for this session if not already set
                 if cherrypy.session.get('uniqueID') is None:
-                    from uuid import uuid4 
+                    from uuid import uuid4
                     cherrypy.session['uniqueID'] = str(uuid4())
                 uniqueID = cherrypy.session.get('uniqueID')
 
@@ -426,17 +427,17 @@ class Kodi(object):
                     ' unloop enabled'))
                 #start the new instance
                 vlcCmd.append(quote('control ' + uniqueID + ' play 1'))
-                
+
                 #replace video URL with vlc URL
                 videoUrl = 'http://' + vlcHost + ':' + vlcTcPort + '/' + uniqueID + '.' + vlcExt
-                
+
                 #send the commands
                 vlcResult = self.vlcSendCmd(serverID, vlcCmd)
                 #if len(vlcResult['status']):
                 #    raise ValueError('Unable to create new transcode task')
                 duration = vlcResult['status'][uniqueID]['length']
                 currTime = vlcResult['status'][uniqueID]['time']
-                    
+
         #return the player template with all needed variables
         return htpc.LOOKUP.get_template('kodiplayer.html').render(
             title=title,
@@ -483,11 +484,11 @@ class Kodi(object):
                 vlcHost = htpc.settings.get('kodi_vlc_ip')
                 vlcPwd = htpc.settings.get('kodi_vlc_password')
                 vlcPort = htpc.settings.get('kodi_vlc_port')
-        
+
         # build url for VLC
-        vlcUrl = vlcHost + ':' + str(vlcPort) 
+        vlcUrl = vlcHost + ':' + str(vlcPort)
         if vlcPwd: vlcUrl = ':' + vlcPwd + '@' + vlcUrl
-        vlcUrl = 'http://' + vlcUrl 
+        vlcUrl = 'http://' + vlcUrl
 
         result = {'command':[],'status':{}}
         try:
@@ -498,7 +499,7 @@ class Kodi(object):
                     c = urllib.urlopen(vlcUrl + '/requests/vlm_cmd.xml?command=' + cmd) #,None,1)
                     result['command'].append(ET.fromstring(c.read()).find('./error').text)
                     sleep(0.5)
-            
+
             #get status of vlm xml and convert to json
             s = urllib.urlopen(vlcUrl + '/requests/vlm.xml')
             for broadcast in ET.fromstring(s.read()).findall('./broadcast'):
@@ -516,7 +517,7 @@ class Kodi(object):
                     brcState = instance.attrib['state']
                     brcTime = round(int(instance.attrib['time']) / 1000000)
                     brcLength = round(int(instance.attrib['length']) / 1000000)
-                    
+
                 result['status'][broadcast.attrib['name']] = {
                     'enabled': brcEnabled,
                     'state': brcState,
@@ -524,7 +525,7 @@ class Kodi(object):
                     'length': brcLength,
                     'inputs': brcInputs
                     }
-            
+
             return result
 
         except Exception, e:
@@ -539,7 +540,7 @@ class Kodi(object):
         sub = f.read()
         encoding = chardet.detect(sub)
         sub = sub.decode(encoding=encoding['encoding'], errors='ignore')
-        
+
         if pycaption is None:
             self.logger.debug("Subtitle: " + unquote(subpath) + ", " + encoding['encoding'] + ", " + str(encoding['confidence']))
             return sub
@@ -575,10 +576,95 @@ class Kodi(object):
             raise cherrypy.HTTPRedirect('http://' + vlcHost + ':' + str(vlcPort))
 
     @cherrypy.expose()
-    @require()
+    @cherrypy.tools.json_out()
+    @require(member_of(htpc.role_admin))
+    def primecache(self, t='all', wanted_art='all', nosync=True, resize=True):
+        ''' find all images and cache them, might take a while...'''
+        kodi = Server(self.url('/jsonrpc', True))
+        url = self.url('/image/')
+        # fix headers
+        _head = 'Basic %s' % self.auth()
+        headers = {'Authorization': _head}
+
+        musicprop = ['fanart', 'thumbnail']
+        itemprop = ['art', 'fanart', 'thumbnail']
+        addonprop = ['thumbnail']
+        stuff = []
+
+        if t == 'all':
+            movie = kodi.VideoLibrary.GetMovies(properties=itemprop)
+            episode = kodi.VideoLibrary.GetEpisodes(properties=itemprop)
+            artist = kodi.AudioLibrary.GetArtists(properties=musicprop)
+            song = kodi.AudioLibrary.GetSongs(properties=musicprop)
+            tvshow = kodi.VideoLibrary.GetTVShows(properties=itemprop)
+            stuff = [movie, episode, artist, song, tvshow]
+        elif t == 'movie':
+            movie = kodi.VideoLibrary.GetMovies(properties=itemprop)
+            stuff.append(movie)
+        elif t == 'episode':
+            episode = kodi.VideoLibrary.GetEpisodes(properties=itemprop)
+            stuff.append(episode)
+        elif t == 'song':
+            song = kodi.AudioLibrary.GetSongs(properties=musicprop)
+            stuff.append(song)
+        elif t == 'tvshow':
+            tvshow = kodi.VideoLibrary.GetTVShows(properties=itemprop)
+            stuff.append(tvshow)
+        elif t == 'addon':
+            addon = kodi.Addons.GetAddons(content='unknown', enabled='all', properties=addonprop)
+            stuff.append(addon)
+
+        imgdir = os.path.join(htpc.DATADIR, 'images/')
+
+        imglist = []
+
+        self.logger.debug('Fetching every image we can find from kodi')  # todo add addon images
+
+        resize_sizes = [[225, 338], [200, 300], [675, 400], [100, 150], [375, 210], [150, 150]]
+
+        for item in stuff:
+            for k, v in list(item.items()):
+                if k in ['episodes', 'movies', 'tvshows', 'songs', 'artists', 'addons']:
+                    self.logger.debug('There where %s %s' % (len(item[k]), k))
+                    for kk in item[k]:
+                        for kkk, vvv, in list(kk.items()):
+                            d = {}
+                            if kkk == wanted_art or wanted_art == 'all':
+                                if kkk == 'art':
+                                    for z, a in list(kk['art'].items()):
+                                        if z == wanted_art or wanted_art == 'all':
+                                            _url = url + quote(a)
+                                            h = hashlib.md5(_url).hexdigest()
+                                            d['fp'] = os.path.join(imgdir, h)
+                                            d['hash'] = h
+                                            d['url'] = _url
+                                            d['resize'] = resize_sizes
+                                            imglist.append(d)
+
+                                if kkk in ['fanart', 'thumbnail']:
+                                    _url = url + quote(vvv)
+                                    h = hashlib.md5(_url).hexdigest()
+                                    d['fp'] = os.path.join(imgdir, h)
+                                    d['hash'] = h
+                                    d['url'] = _url
+                                    d['resize'] = resize_sizes
+                                    imglist.append(d)
+
+        self.logger.debug('Found %s images in total' % len(imglist))
+
+        try:
+            if nosync:
+                t = cachedprime(imglist, headers, resize=bool(resize))
+                return t
+
+        except Exception as e:
+            self.logger.debug('%s' % e)
+
+    @cherrypy.expose()
+    @require(member_of(htpc.role_admin))
     @cherrypy.tools.json_out()
     def ping(self, kodi_server_host='', kodi_server_port='',
-            kodi_server_username='', kodi_server_password='', **kwargs):
+             kodi_server_username='', kodi_server_password='', **kwargs):
         """ Tests settings, returns MAC address on success and null on fail """
         self.logger.debug("Testing kodi connectivity")
         try:
@@ -588,7 +674,7 @@ class Kodi(object):
             kodi = Server('http://' + url + '/jsonrpc')
             self.logger.debug("Trying to contact kodi via %s" % url)
             return kodi.XBMC.GetInfoLabels(labels=["Network.MacAddress"])
-        except Exception, e:
+        except Exception as e:
             self.logger.exception(e)
             self.logger.error("Unable to contact kodi via %s", url)
 
@@ -596,7 +682,6 @@ class Kodi(object):
     @require()
     @cherrypy.tools.json_out()
     def getserver(self, id=None):
-        
         if id:
             """ Get kodi server info """
             try:
@@ -609,7 +694,7 @@ class Kodi(object):
         servers = []
         for s in KodiServers.select():
             servers.append({'id': s.id, 'name': s.name})
-        if len(servers) < 1:
+        if not servers:
             return
         try:
             current = self.current.name
@@ -618,15 +703,14 @@ class Kodi(object):
         return {'current': current, 'servers': servers}
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_admin))
     @cherrypy.tools.json_out()
     def setserver(self, kodi_server_id, kodi_server_name, kodi_server_host, kodi_server_port,
-            kodi_server_username=None, kodi_server_password=None, kodi_server_mac=None, kodi_server_starterport='',
-            kodi_server_vlc_port='', kodi_server_vlc_password='', kodi_server_vlc_transcode_port='', kodi_server_vlc_enabled=''):
+                  kodi_server_username=None, kodi_server_password=None, kodi_server_mac=None, kodi_server_starterport='',
+                  kodi_server_vlc_port='', kodi_server_vlc_password='', kodi_server_vlc_transcode_port='', kodi_server_vlc_enabled=''):
         """ Create a server if id=0, else update a server """
-        
         if kodi_server_starterport == '':
-            kodi_server_starterport = None 
+            kodi_server_starterport = None
         else:
             kodi_server_starterport = int(kodi_server_starterport)
         if kodi_server_vlc_port == '':
@@ -634,28 +718,29 @@ class Kodi(object):
         else:
             kodi_server_vlc_port = int(kodi_server_vlc_port)
         if kodi_server_vlc_transcode_port == '':
-            kodi_server_vlc_transcode_port = None 
+            kodi_server_vlc_transcode_port = None
         else:
             kodi_server_vlc_transcode_port = int(kodi_server_vlc_transcode_port)
-        
+
         if kodi_server_id == "0":
             self.logger.debug("Creating kodi-Server in database")
             try:
                 server = KodiServers(name=kodi_server_name,
-                        host=kodi_server_host,
-                        port=int(kodi_server_port),
-                        username=kodi_server_username,
-                        password=kodi_server_password,
-                        mac=kodi_server_mac,
-                        starterport=kodi_server_starterport,
-                        vlc_enabled=int(kodi_server_vlc_enabled),
-                        vlc_port=kodi_server_vlc_port,
-                        vlc_password=kodi_server_vlc_password,
-                        vlc_transcode_port=kodi_server_vlc_transcode_port
-                        )
+                                     host=kodi_server_host,
+                                     port=int(kodi_server_port),
+                                     username=kodi_server_username,
+                                     password=kodi_server_password,
+                                     mac=kodi_server_mac,
+                                     starterport=kodi_server_starterport,
+                                     vlc_enabled=int(kodi_server_vlc_enabled),
+                                     vlc_port=kodi_server_vlc_port,
+                                     vlc_password=kodi_server_vlc_password,
+                                     vlc_transcode_port=kodi_server_vlc_transcode_port)
+
                 self.changeserver(server.id)
+                htpc.BLACKLISTWORDS.append(kodi_server_password)
                 return 1
-            except Exception, e:
+            except Exception as e:
                 self.logger.debug("Exception: " + str(e))
                 self.logger.error("Unable to create kodi-Server in database")
                 return 0
@@ -675,12 +760,12 @@ class Kodi(object):
                 server.vlc_password = kodi_server_vlc_password
                 server.vlc_transcode_port = kodi_server_vlc_transcode_port
                 return 1
-            except SQLObjectNotFound, e:
+            except SQLObjectNotFound as e:
                 self.logger.error("Unable to update kodi-Server " + server.name + " in database")
                 return 0
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_admin))
     def delserver(self, id):
         """ Delete a server """
         self.logger.debug("Deleting server " + str(id))
@@ -709,14 +794,13 @@ class Kodi(object):
 
     @cherrypy.expose()
     @require()
-    def GetThumb(self, thumb=None, h=None, w=None, o=100):
+    def GetThumb(self, thumb=None, h=None, w=None, o=100, mode=None):
         """ Parse thumb to get the url and send to htpc.proxy.get_image """
         url = self.url('/images/DefaultVideo.png')
         if thumb:
             url = self.url('/image/' + quote(thumb))
-
-        self.logger.debug("Trying to fetch image via %s", url)
-        return get_image(url, h, w, o, self.auth())
+        self.logger.debug("Trying to fetch image via %s" % url)
+        return get_image(url, h, w, o, mode, self.auth())
 
     @cherrypy.expose()
     @require()
@@ -728,13 +812,13 @@ class Kodi(object):
             kodi = Server(self.url('/jsonrpc', True))
             sort = {'order': sortorder, 'method': sortmethod, 'ignorearticle': True}
             properties = ['title', 'year', 'plot', 'thumbnail', 'file', 'fanart', 'studio', 'trailer',
-                    'imdbnumber', 'genre', 'rating', 'playcount']
+                          'imdbnumber', 'genre', 'rating', 'playcount']
             limits = {'start': int(start), 'end': int(end)}
             filter = {'field': 'title', 'operator': 'contains', 'value': filter}
             if hidewatched == "1":
                 filter = {"and": [filter, {'field': 'playcount', 'operator': 'is', 'value': '0'}]}
             return kodi.VideoLibrary.GetMovies(sort=sort, properties=properties, limits=limits, filter=filter)
-        except Exception, e:
+        except Exception as e:
             self.logger.exception(e)
             self.logger.error("Unable to fetch movies!")
             return
@@ -755,7 +839,7 @@ class Kodi(object):
                 filter = {"and": [filter, {'field': 'playcount', 'operator': 'is', 'value': '0'}]}
             shows = kodi.VideoLibrary.GetTVShows(sort=sort, properties=properties, limits=limits, filter=filter)
             return shows
-        except Exception, e:
+        except Exception as e:
             self.logger.exception(e)
             self.logger.error("Unable to fetch TV Shows")
             return
@@ -792,7 +876,7 @@ class Kodi(object):
             limits = {'start': int(start), 'end': int(end)}
             filter = {'field': 'artist', 'operator': 'contains', 'value': filter}
             return kodi.AudioLibrary.GetArtists(properties=properties, limits=limits, sort=sort, filter=filter)
-        except Exception, e:
+        except Exception as e:
             self.logger.exception(e)
             self.logger.error("Unable to fetch artists!")
             return
@@ -814,7 +898,7 @@ class Kodi(object):
                 filter = {'or': [{'field': 'album', 'operator': 'contains', 'value': filter},
                                  {'field': 'artist', 'operator': 'contains', 'value': filter}]}
             return kodi.AudioLibrary.GetAlbums(properties=properties, limits=limits, sort=sort, filter=filter)
-        except Exception, e:
+        except Exception as e:
             self.logger.debug("Exception: %s", str(e))
             self.logger.error("Unable to fetch albums!")
             return
@@ -840,7 +924,7 @@ class Kodi(object):
                                  {'field': 'title', 'operator': 'contains', 'value': filter}]}
 
             return kodi.AudioLibrary.GetSongs(properties=properties, limits=limits, sort=sort, filter=filter)
-        except Exception, e:
+        except Exception as e:
             self.logger.exception(e)
             self.logger.error("Unable to fetch artists!")
             return
@@ -854,7 +938,7 @@ class Kodi(object):
         try:
             kodi = Server(self.url('/jsonrpc', True))
             return kodi.PVR.GetChannelGroups(channeltype=type)
-        except Exception, e:
+        except Exception as e:
             self.logger.exception(e)
             self.logger.error("Unable to fetch channelgroups!")
             return
@@ -868,13 +952,13 @@ class Kodi(object):
         try:
             kodi = Server(self.url('/jsonrpc', True))
             return kodi.PVR.GetChannels(channelgroupid=int(group), properties=['thumbnail'])
-        except Exception, e:
+        except Exception as e:
             self.logger.exception(e)
             self.logger.error("Unable to fetch channels!")
             return
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     @cherrypy.tools.json_out()
     def ExecuteAddon(self, addon, cmd0='', cmd1=''):
         if cmd0 == 'undefined':
@@ -883,7 +967,7 @@ class Kodi(object):
         if cmd1 == 'undefined':
             cmd1 = ''
         """ Execute an kodi addon """
-        self.logger.debug("Execute '" + addon + "' with commands cmd0 '" + cmd0 + "' and cmd1 '" + cmd1 +"'")
+        self.logger.debug('Execute %s with commands cmd0 %s and cmd1 %s' % (addon, cmd0, cmd1))
         kodi = Server(self.url('/jsonrpc', True))
         if addon == 'script.artwork.downloader':
             return kodi.Addons.ExecuteAddon(addonid=addon, params=['tvshow', 'movie', 'musicvideos'])
@@ -896,13 +980,13 @@ class Kodi(object):
         elif addon == 'script.cdartmanager':
             return kodi.Addons.ExecuteAddon('addonid=' + addon, cmd0)
         elif addon == 'plugin.video.twitch':
-            if cmd0: # If search
+            if cmd0:  # If search
                 return kodi.Addons.ExecuteAddon(addon, '/searchresults/'+ cmd0 + '/0' )
-            else: # Open plugin
+            else:  # Open plugin
                 return kodi.Addons.ExecuteAddon(addon, '/')
         elif addon == 'plugin.video.nrk':
             if cmd0:
-                #Does not work in kodi or via this one, think its a addon problem
+                # Does not work in kodi or via this one, think its a addon problem
                 cmd = '/search/%s/1' % cmd0
                 return kodi.Addons.ExecuteAddon(addon, cmd)
             else:
@@ -914,7 +998,7 @@ class Kodi(object):
             return kodi.Addons.ExecuteAddon(addonid=addon)
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     @cherrypy.tools.json_out()
     def Enable_DisableAddon(self, addonid=None, enabled=None):
         kodi = Server(self.url('/jsonrpc', True))
@@ -1022,11 +1106,13 @@ class Kodi(object):
                 playerprop = ['speed', 'position', 'time', 'totaltime',
                               'percentage', 'subtitleenabled', 'currentsubtitle',
                               'subtitles', 'currentaudiostream', 'audiostreams']
-                itemprop = ['thumbnail', 'showtitle', 'season', 'episode', 'year', 'fanart']
+
+                itemprop = ['title', 'season', 'episode', 'duration', 'showtitle',
+                            'fanart', 'tvshowid', 'plot', 'thumbnail', 'year']
 
             elif player['type'] == 'audio':
                 playerprop = ['speed', 'position', 'time', 'totaltime', 'percentage']
-                itemprop = ['thumbnail', 'title', 'artist', 'album', 'year', 'fanart']
+                itemprop = ['title', 'duration', 'fanart', 'artist', 'albumartist', 'album', 'track', 'artistid', 'albumid', 'thumbnail', 'year']
 
             app = kodi.Application.GetProperties(properties=['muted', 'volume'])
             player = kodi.Player.GetProperties(playerid=playerid, properties=playerprop)
@@ -1034,9 +1120,8 @@ class Kodi(object):
 
             return {'playerInfo': player, 'itemInfo': item, 'app': app}
         except IndexError:
-            self.logger.debug("Nothing current playing.")
             return
-        except Exception, e:
+        except Exception as e:
             self.logger.exception(e)
             self.logger.error("Unable to fetch currently playing information!")
             return
@@ -1051,20 +1136,20 @@ class Kodi(object):
             kodi = Server(self.url('/jsonrpc', True))
             if action == 'seek':
                 player = kodi.Player.GetActivePlayers()[0]
-                return kodi.Player.Seek(playerid=player[u'playerid'], value=float(value))
+                return kodi.Player.Seek(playerid=player['playerid'], value=float(value))
             elif action == 'jump':
                 player = kodi.Player.GetActivePlayers()[0]
-                return kodi.Player.GoTo(playerid=player[u'playerid'], to=int(value))
+                return kodi.Player.GoTo(playerid=player['playerid'], to=int(value))
             elif action == 'party':
                 return kodi.Player.Open(item={'partymode': 'audio'})
             elif action == 'getsub':
                 try:
-                    #Frodo
+                    # Frodo
                     return kodi.Addons.ExecuteAddon(addonid='script.kodi.subtitles')
                 except:
                     pass
                 try:
-                    #Gotham
+                    # Gotham
                     return kodi.GUI.ActivateWindow(window='subtitlesearch')
                 except:
                     pass
@@ -1072,7 +1157,7 @@ class Kodi(object):
                 return kodi.Application.SetVolume(volume=int(value))
             else:
                 return kodi.Input.ExecuteAction(action=action)
-        except Exception, e:
+        except Exception as e:
             self.logger.exception(e)
             self.logger.error("Unable to control kodi with action: %s", action)
             return 'error'
@@ -1094,7 +1179,7 @@ class Kodi(object):
         self.logger.debug("Changing subtitles to %s", subtitle)
         try:
             kodi = Server(self.url('/jsonrpc', True))
-            playerid = kodi.Player.GetActivePlayers()[0][u'playerid']
+            playerid = kodi.Player.GetActivePlayers()[0]['playerid']
             try:
                 subtitle = int(subtitle)
                 kodi.Player.SetSubtitle(playerid=playerid, subtitle=subtitle, enable=True)
@@ -1102,7 +1187,7 @@ class Kodi(object):
             except ValueError:
                 kodi.Player.SetSubtitle(playerid=playerid, subtitle='off')
                 return "Disabling subtitles."
-        except Exception, e:
+        except Exception as e:
             self.logger.exception(e)
             self.logger.error("Unable to set subtitle to specified value %s", subtitle)
             return
@@ -1115,15 +1200,15 @@ class Kodi(object):
         self.logger.debug("Chaning audio stream to %s", audio)
         try:
             kodi = Server(self.url('/jsonrpc', True))
-            playerid = kodi.Player.GetActivePlayers()[0][u'playerid']
+            playerid = kodi.Player.GetActivePlayers()[0]['playerid']
             return kodi.Player.SetAudioStream(playerid=playerid, stream=int(audio))
-        except Exception, e:
+        except Exception as e:
             self.logger.exception(e)
             self.logger.error("Unable to change audio stream to specified value %s", audio)
             return
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     @cherrypy.tools.json_out()
     def System(self, action=''):
         """ Various system commands """
@@ -1146,7 +1231,7 @@ class Kodi(object):
             return 'Rebooting kodi.'
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     @cherrypy.tools.json_out()
     def Wake(self):
         """ Send WakeOnLan package """
@@ -1154,25 +1239,26 @@ class Kodi(object):
         try:
             addr_byte = self.current.mac.split(':')
             hw_addr = struct.pack('BBBBBB',
-            int(addr_byte[0], 16),
-            int(addr_byte[1], 16),
-            int(addr_byte[2], 16),
-            int(addr_byte[3], 16),
-            int(addr_byte[4], 16),
-            int(addr_byte[5], 16))
+                                  int(addr_byte[0], 16),
+                                  int(addr_byte[1], 16),
+                                  int(addr_byte[2], 16),
+                                  int(addr_byte[3], 16),
+                                  int(addr_byte[4], 16),
+                                  int(addr_byte[5], 16))
+
             msg = '\xff' * 6 + hw_addr * 16
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
             s.sendto(msg, ("255.255.255.255", 9))
             self.logger.info("WOL package sent to %s", self.current.mac)
             return "WOL package sent"
-        except Exception, e:
+        except Exception as e:
             self.logger.exception(e)
             self.logger.error("Unable to send WOL packet")
             return "Unable to send WOL packet"
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     @cherrypy.tools.json_out()
     def Run(self):
         """ Send XBMC Starter packet """
@@ -1182,7 +1268,7 @@ class Kodi(object):
             s.sendto("YatseStart-Xbmc", (self.current.host, self.current.starterport))
             self.logger.info("XBMC Starter package sent to %s:%s", self.current.host, self.current.starterport)
             return "XBMC Starter packet sent"
-        except Exception, e:
+        except Exception as e:
             self.logger.exception(e)
             self.logger.error("Unable to send XBMC Starter packet")
             self.logger.debug('Have you installed http://yatse.leetzone.org/redmine/projects/androidwidget/wiki/XbmcStarter?')
@@ -1193,9 +1279,9 @@ class Kodi(object):
     @cherrypy.tools.json_out()
     def Notify(self, text):
         """ Create popup in kodi """
-        self.logger.debug("Sending notification to kodi: %s", text)
+        self.logger.debug("Sending notification to kodi: %s" % text)
         kodi = Server(self.url('/jsonrpc', True))
-        image = 'https://raw.github.com/styxit/HTPC-Manager/master/interfaces/default/img/kodi-logo.png'
+        image = '../interfaces/default/img/kodi-logo.png'
         return kodi.GUI.ShowNotification(title='HTPC manager', message=text, image=image)
 
     @cherrypy.expose()
@@ -1210,7 +1296,7 @@ class Kodi(object):
                           'fanart', 'trailer', 'imdbnumber', 'studio', 'genre', 'rating']
             limits = {'start': 0, 'end': int(limit)}
             return kodi.VideoLibrary.GetRecentlyAddedMovies(properties=properties, limits=limits)
-        except Exception, e:
+        except Exception as e:
             self.logger.exception(e)
             self.logger.error("Unable to fetch recently added movies!")
             return
@@ -1227,7 +1313,7 @@ class Kodi(object):
                           'thumbnail', 'plot', 'fanart', 'file']
             limits = {'start': 0, 'end': int(limit)}
             return kodi.VideoLibrary.GetRecentlyAddedEpisodes(properties=properties, limits=limits)
-        except Exception, e:
+        except Exception as e:
             self.logger.exception(e)
             self.logger.error("Unable to fetch recently added TV Shows")
             return
@@ -1243,7 +1329,7 @@ class Kodi(object):
             properties = ['artist', 'albumlabel', 'year', 'description', 'thumbnail']
             limits = {'start': 0, 'end': int(limit)}
             return kodi.AudioLibrary.GetRecentlyAddedAlbums(properties=properties, limits=limits)
-        except Exception, e:
+        except Exception as e:
             self.logger.exception(e)
             self.logger.error("Unable to fetch recently added Music!")
             return
@@ -1272,10 +1358,10 @@ class Kodi(object):
                 serverinfo = KodiServers.selectBy(id=server).getOne()
             except SQLObjectNotFound:
                 return
-            url = serverinfo.host + ':' + str(serverinfo.port) 
+            url = serverinfo.host + ':' + str(serverinfo.port)
             if auth and serverinfo.username and serverinfo.password:
                 url = serverinfo.username + ':' + serverinfo.password + '@' + url
-            return 'http://' + url 
+            return 'http://' + url
         else:
             url = self.current.host + ':' + str(self.current.port) + path
             if auth and self.current.username and self.current.password:
@@ -1285,6 +1371,5 @@ class Kodi(object):
 
     def auth(self):
         """ Generate a base64 HTTP auth string based on settings """
-        self.logger.debug("Generating authentication string")
         if self.current.username and self.current.password:
             return base64.encodestring('%s:%s' % (self.current.username, self.current.password)).strip('\n')

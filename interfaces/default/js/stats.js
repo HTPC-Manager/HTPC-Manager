@@ -1,5 +1,5 @@
-// Document ready
 $(document).ready(function () {
+    byteSizeOrdering()
     if (importPsutil) {
         reloadtab();
         network_usage_table();
@@ -17,6 +17,18 @@ $(document).ready(function () {
         $('#procl').click(function () {
             processes();
         });
+
+        $('.scriptli').click(function (e) {
+            e.preventDefault();
+            var script = $(this).attr('data-filename');
+            var conf = confirm('Are your sure you want to execute ' + script)
+            if (conf) {
+                runscript(script);
+            }
+            // to stop the tab from exceute
+            return false;
+        });
+
     }
 
     if (importpySMART) {
@@ -36,8 +48,8 @@ $(document).ready(function () {
         });
 
     }
+    $(window).trigger('hashchange');
 });
-
 
 if (importPsutil) {
     // Set timeintercal to refresh stats
@@ -54,63 +66,40 @@ if (importPsutil) {
     }, 10000);
 }
 
-// For hdd. Converts bytes to filesize in kb,mb,gb
- function getReadableFileSizeStringHDD(fileSizeInBytes) {
-    var i = -1;
-    var byteUnits = [' kB', ' MB', ' GB', ' TB', 'PB'];
-    do {
-        fileSizeInBytes = fileSizeInBytes / 1000;
-        i++;
-    } while (fileSizeInBytes > 1000);
-    return fileSizeInBytes.toFixed(1) + byteUnits[i];
-};
-
-// Converts bytes to filesize in kb,mb,gb
-function getReadableFileSizeString(fileSizeInBytes) {
-    var i = -1;
-    var byteUnits = [' kB', ' MB', ' GB', ' TB', 'PB'];
-    do {
-        fileSizeInBytes = fileSizeInBytes / 1024;
-        i++;
-    } while (fileSizeInBytes > 1024);
-    return fileSizeInBytes.toFixed(1) + byteUnits[i];
-};
-
 // Makes the harddisk lists
 function get_diskinfo() {
     $.ajax({
         'url': WEBDIR + 'stats/disk_usage',
             'dataType': 'json' ,
             'success': function (response) {
-            $('.disktspinner').show();
+                $('.disktspinner').show();
 
-            $('#disklist').html("");
-            $('#error_message').text("");
+                $('#disklist').html("");
+                $('#error_message').text("");
 
-            $.each(response, function (i, disk) {
-                var row = $('<tr>');
-                var progress2 = 	"<div class='progress hddprog'><div class=bar style=width:" + disk.percent + "%><span class=sr-only>"+ getReadableFileSizeStringHDD(disk.used) +"</span></div><div class='bar bar-success' style=width:" + (100 - disk.percent) + "% ><span class=sr-only>" + getReadableFileSizeStringHDD(disk.free) +"</span></div>";
+                $.each(response, function (i, disk) {
+                    var row = $('<tr>');
+                    var lazy_solution = (disk.percent >= 90) ? 'progress-danger' : '';
+                    var progress = "<div class='progress " + lazy_solution + " hddprog'><div class=bar style=width:" + disk.percent + "%><span class=sr-only>"+ humanFileSize(disk.used, 2) +"</span></div><div class='bar bar-success' style=width:" + (100 - disk.percent) + "% ><span class=sr-only>" + getReadableFileSizeStringHDD(disk.free) +"</span></div>";
 
-                if (disk.percent >=85) {
-                    //progress2.addClass('progress-danger'); // need to check, does not work
-                }
+                    row.append(
+                        $('<td>').addClass('stats_disk_mountpoint').text(disk.mountpoint),
+                        $('<td>').addClass('stats_disk_device hidden-phone').text(disk.device),
+                        $('<td>').addClass('stats_disk_fstype hidden-phone').text(disk.fstype),
+                        $('<td>').addClass('stats_disk_free').text(humanFileSize(disk.free, 2)),
+                        $('<td>').addClass('stats_disk_used').text(humanFileSize(disk.used, 2)),
+                        $('<td>').addClass('stats_disk_total').text(humanFileSize(disk.total, 2)),
+                        $('<td>').addClass('span3 stats_disk_progress').html(progress),
+                        $('<td>').addClass('stats_disk_percent').text(disk.percent)
+                    );
 
-                row.append(
-                $('<td>').addClass('stats_disk_mountpoint').text(disk.mountpoint),
-                $('<td>').addClass('stats_disk_device hidden-phone').text(disk.device),
-                $('<td>').addClass('stats_disk_fstype hidden-phone').text(disk.fstype),
-                $('<td>').addClass('stats_disk_free').text(getReadableFileSizeStringHDD(disk.free)),
-                $('<td>').addClass('stats_disk_used').text(getReadableFileSizeStringHDD(disk.used)),
-                $('<td>').addClass('stats_disk_total').text(getReadableFileSizeStringHDD(disk.total)),
-                $('<td>').addClass('span3 stats_disk_progress').html(progress2),
-                $('<td>').addClass('stats_disk_percent').text(disk.percent));
-                $('#disklist').append(row);
-		})
-            //$('.spinner').hide();
-        },
-        complete: function() {
-            $('.disktspinner').hide();
-        }
+                    $('#disklist').append(row);
+		        })
+            },
+            complete: function() {
+                $('.disktspinner').hide();
+                $('#disklist').parent().trigger('update');
+            }
     });
 }
 
@@ -121,27 +110,46 @@ function processes() {
         'dataType': 'json',
         'success': function (response) {
             $('.procspinner')
-            byteSizeOrdering()
             $('#proclist').html("");
             $('#error_message').text("");
 
             $.each(response, function (i, proc) {
+                var pmc
+                var meminfo
+
+                if (proc.memory_percent === "N/A" || proc.memory_percent == null) {
+                    pmc = 'N/A'
+                } else {
+                    pmc = proc.memory_percent.toFixed(2) + '%'
+                }
+
+                if (proc.memory_info == 'N/A' || proc.memory_info == null) {
+                    meminfo = 'N/A'
+                } else {
+                    meminfo = humanFileSize(proc.memory_info[0], 2)
+
+                }
                 var row = $('<tr>');
                 row.append(
-                $('<td>').addClass('processes-name').text(proc.name),
-                $('<td>').addClass('processes-pid').text(proc.pid),
-                $('<td>').addClass('processes-status hidden-phone').text(proc.status),
-                $('<td>').addClass('processes-username hidden-phone').text(proc.username),
-                $('<td>').addClass('processes-memory-percent').text(proc.memory_percent.toFixed(2) + '%'),
-                $('<td>').addClass('processes-memory-info').text(getReadableFileSizeString(proc.memory_info[0])),
-                $('<td>').addClass('processes-runningtime').text(proc.r_time),
-                $('<td>').addClass('processes-percent').text(proc.cpu_percent+ '%'),
-                $('<td>').append('<a href="#" class="btn btn-mini cmd" data-cmd="kill" data-name='+proc.name+' data-pid='+proc.pid+'><i class="icon-remove"></i></a>'));
+                    $('<td>').addClass('processes-name').text(proc.name),
+                    $('<td>').addClass('processes-pid').text(proc.pid),
+                    $('<td>').addClass('processes-status hidden-phone').text(proc.status),
+                    $('<td>').addClass('processes-username hidden-phone').text(proc.username),
+                    $('<td>').addClass('processes-memory-percent').text(pmc),
+                    $('<td>').addClass('processes-memory-info').text(meminfo.toUpperCase()), // This not correct for kB but its for tablesoter
+                    $('<td>').addClass('processes-runningtime').text(pad(proc.r_time, 8)),
+                    $('<td>').addClass('processes-percent').text(proc.cpu_percent+ '%'),
+                    $('<td>').append('<a href="#" class="btn btn-mini cmd" data-cmd="kill" data-name='+proc.name+' data-pid='+proc.pid+'><i class="fa fa-times"></i></a>')
+                );
                 $('#proclist').append(row);
 
             })
-            $('table').trigger("update");
+            $('.table-sortable').trigger("update");
         },
+        complete: function() {
+            $('.disktspinner').hide();
+            $('#proclist').parent().trigger('update');
+        }
 
 
     });
@@ -149,7 +157,7 @@ function processes() {
 
 function uptime() {
     $.getJSON(WEBDIR + "stats/uptime", function (data) {
-	    $("#uptime").text("Uptime: "+ data.uptime);
+	    $("#uptime").text("Uptime: "+ pad(data.uptime, 8));
     });
 }
 
@@ -165,24 +173,6 @@ function get_local_ip() {
     });
 }
 
-function nw_table() {
-    $.getJSON(WEBDIR + 'stats/nw_table', function (response) {
-        //
-    })
-}
-
-// Not in use
-function network_usage() {
-    $.getJSON(WEBDIR + "stats/network_usage", function (response) {
-        $(".nw").append("<div>Recv: "+ getReadableFileSizeString(response.bytes_recv) +"</div>");
-        $(".nw").append("<div>Sent: "+ getReadableFileSizeString(response.bytes_sent) +"</div>");
-        $(".nw").append("<div>Error in: "+ response.errin +"</div>");
-        $(".nw").append("<div>Error out: "+ response.errout +"</div>");
-        $(".nw").append("<div>Drop in: "+ response.dropin +"</div>");
-        $(".nw").append("<div>Drop out: "+ response.dropout +"</div>");
-    });
-}
-
 function network_usage_table() {
     $.getJSON(WEBDIR + "stats/network_usage", function (response) {
         $("#stat-sent").text(getReadableFileSizeString(response.bytes_sent));
@@ -191,13 +181,12 @@ function network_usage_table() {
         $(".errout").text(response.errout)
         $(".dropin").text(response.dropin)
         $(".dropout").text(response.dropout)
-        //$(".nw").html("<table class='table nwtable'><tr><td class=span4>Network</td><td class=span4>In</td><td class=span4>Out</td></tr><tr><td>Drop</td><td>" + response.dropin + "</td><td>" + response.dropout + "</td></tr><tr><td>Error</td><td>" + response.errin + "</td><td>" + response.errout + "</td></tr><tr><td>IP</td><td class=tlip></td><td class=txip></td></tr></tbody></table>");
     });
 }
 
 function get_user() {
     $.getJSON(WEBDIR + "stats/get_user", function (response) {
-        $("#system_user").text(response.name +" logged in " + response.started + " ago")
+        $("#system_user").text(response.name +" logged in " + pad(response.started, 8) + " ago")
     });
 }
 
@@ -209,7 +198,7 @@ function sys_info() {
 
 function virtual_memory_bar() {
     $.getJSON(WEBDIR + "stats/virtual_memory", function (virtual) {
-	$(".virmem").html("<div>Physical memory</div><div class=progress><div class=bar style=width:" + virtual.percent + "%><span class=sr-only>Used: "+ virtual.percent +"%</span></div><div class='bar bar-success' style=width:" + (100 - virtual.percent) + "%><span class=sr-only>Free: " + (100 - virtual.percent) +"%</span></div></div><div class=progress><div class=bar style=width:" + virtual.percent + "%><span class=sr-only>Used: "+ getReadableFileSizeString((virtual.total - virtual.available))+"</span></div><div class='bar bar-success' style=width:" + (100 - virtual.percent) + "% ><span class=sr-only>Free: " + getReadableFileSizeString(virtual.available) +"</span></div>");
+	   $(".virmem").html("<div>Physical memory</div><div class=progress><div class=bar style=width:" + virtual.percent + "%><span class=sr-only>Used: "+ virtual.percent +"%</span></div><div class='bar bar-success' style=width:" + (100 - virtual.percent) + "%><span class=sr-only>Free: " + (100 - virtual.percent) +"%</span></div></div><div class=progress><div class=bar style=width:" + virtual.percent + "%><span class=sr-only>Used: "+ getReadableFileSizeString((virtual.total - virtual.available))+"</span></div><div class='bar bar-success' style=width:" + (100 - virtual.percent) + "% ><span class=sr-only>Free: " + getReadableFileSizeString(virtual.available) +"</span></div>");
 
     });
 }
@@ -258,17 +247,6 @@ function getohm() {
     });
 }
 
-function getohm2() {
-    $.getJSON(WEBDIR + "stats/ohm", function (data) {
-        // Makes the table with correct classes
-        unpack(data);
-
-    }).done(function() {
-        // make the three after unpack set the correct markup
-        $('.ohm_three').treegrid()
-    })
-
-}
 
  function unpack(obj) {
     $('.ohm_three').empty()
@@ -325,12 +303,9 @@ function return_stats_settings() {
             swap_memory_table();
             virtual_memory_table();
 
-        } else {
-            //pass
         }
     });
 }
-
 
 function smart() {
     $('.smart-spinner').show();
@@ -339,7 +314,6 @@ function smart() {
         'url': WEBDIR + 'stats/smart_info',
             'dataType': 'json' ,
             'success': function (response) {
-            byteSizeOrdering()
             $('#smartlist').html("");
             var row_id = 1
             var parent_id = row_id
@@ -359,7 +333,7 @@ function smart() {
                 $('.smart_three').append(row);
                 parent_id = row_id
                 row_id = row_id + 1
-                row = $('<tr>');                
+                row = $('<tr>');
                 row.addClass('treegrid-' + row_id).addClass('treegrid-parent-' + parent_id);
                 row.append(
                 $('<td>').text(""),
@@ -381,7 +355,7 @@ function smart() {
                 $('<td>').text(""));
                 $('.smart_three').append(row);
                 $.each(drives.attributes, function (x, attr) {
-                    row = $('<tr>');                
+                    row = $('<tr>');
                     row.append(
                     $('<td>').text(attr.id),
                     $('<td>').text(attr.name),
@@ -402,8 +376,6 @@ function smart() {
     });
 }
 
-
-// Not in use atm
 function reloadtab() {
     if ($('#diskt').is(':visible')) {
 		get_diskinfo();
@@ -413,16 +385,6 @@ function reloadtab() {
         getohm();
     }
 }
-
-   $('#diskl').click(function () {
-       get_diskinfo();
-   });
-    $('#procl').click(function () {
-       processes();
-   });
-    $('#ohm').click(function () {
-       getohm();
-   });
 
    //Used for kill and signal command
    $(document).on('click', '.cmd', function(e){
@@ -443,26 +405,29 @@ function reloadtab() {
    }
    });
 
-   // Used for popen
-    $(document).on('click', '#sendcmd', function(){
-       var i = $('#cmdinput').val();
-       param = {'cmd':i};
-       if (confirm('Are you sure you want to send "'+ i +'" to shell?')) {
-       $.getJSON(WEBDIR + "stats/cmdpopen/",param, function (response) {
-            $.pnotify({
-                title: 'Response',
-                text: response.msg,
-                type: 'success',
-                width: '500px',
-                min_height: '400px'
-            });
+    function runscript(s){
+        $.ajax({
+                url: WEBDIR + 'stats/run_script/'+ s,
+                type: 'get',
+                success: function (data) {
+                    if (data.exit_status) {
+                        $('#script-info').html('Failed to run ' + s);
+                        $('#script-result').html('<pre>' + data.result +'</pre>');
+                    }
+                    if (data.result) {
+                        $('#script-result').html('<pre style=display:table;>' + data.result +'</pre>');
+                        $('#script-info').html('<code>'+ s + ' took ' + data.runtime + ' sec</code>');
 
-       });
-   }
-   });
+                    }
+
+                }
+        });
+    }
+
 
     if (location.hash) {
-        $('a[href='+location.hash+']').tab('show');
+        $('a[href="' + location.hash + '"]').tab('show');
     } else {
         $('a[data-toggle="tab"]:first').tab('show')
     }
+

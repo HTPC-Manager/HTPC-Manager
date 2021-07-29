@@ -18,6 +18,11 @@ $(document).ready(function () {
         cancelAddShow();
     });
 
+    $('#postprocess').click(function(e) {
+            e.preventDefault();
+            Postprocess();
+    });
+
 });
 
 function loadShows() {
@@ -86,7 +91,7 @@ function loadShow(tvdbid) {
 
             modalContent = $('<div>');
             modalContent.append(
-              $('<img>').attr('src', WEBDIR + 'sickbeard/GetBanner/'+tvdbid).addClass('img-rounded'),
+              $('<img>').attr('src', WEBDIR + 'sickbeard/GetBanner?tvdbid='+tvdbid).addClass('img-rounded'),
               $('<hr>'),
               table
              );
@@ -309,20 +314,38 @@ function sickbeardStatusIcon(iconText, white){
     'Skipped'
   ];
   var icons = [
-    'icon-download-alt',
-    'icon-repeat',
-    'icon-share-alt',
-    'icon-time',
-    'icon-lock',
-    'icon-fast-forward'
+    'fa fa-download',
+    'fa fa-repeat',
+    'fa fa-share-alt',
+    'fa fa-clock-o',
+    'fa fa-lock',
+    'fa fa-fast-forward'
   ];
 
   if (text.indexOf(iconText) != -1) {
     var icon = $('<i>').addClass(icons[text.indexOf(iconText)]);
     if (white == true) {
-      icon.addClass('icon-white');
+      icon.addClass('fa-inverse');
     }
     return icon;
   }
   return '';
+}
+
+function Postprocess() {
+    var data = {};
+    p = prompt('Write path to processfolder or leave blank for default path');
+    if (p || p.length >= 0) {
+        data.path = p;
+
+        $.get(WEBDIR + 'sickbeard/Postprocess', data, function(r) {
+            state = (r.length) ? 'success' : 'error';
+            // Stop the notify from firing on cancel
+            if (p !== null) {
+                path = (p.length === 0) ? 'Default folder' : p;
+                notify('sickrage', 'Postprocess ' + path, state);
+            }
+        });
+
+    }
 }

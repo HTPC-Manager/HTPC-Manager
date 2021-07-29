@@ -1,5 +1,9 @@
 $(document).ready(function () {
+    // Replace this and use the mako?
     get_branches()
+
+    // Activates the tooltips
+    $('.settingstooltip').tooltip({placement: 'right'})
 
     // Only look for tvs if its enabled.
     if ($("#samsungtv_enable").is(':checked')) {
@@ -23,7 +27,7 @@ $(document).ready(function () {
             url: WEBDIR + 'settings/urls',
             data: JSON.stringify(data),
             success: function () {
-                notify('Settings', 'Save successful', 'info');
+                notify('Settings', 'Save successful', 'success');
             },
             error: function () {
                 notify('Settings', 'Save failed', 'error');
@@ -55,26 +59,26 @@ $(document).ready(function () {
         $.post(action, data, function (data) {
             btn.button('reset');
             if ($('#couchpotato_name').is(":visible")) {
-                if (data.success) {
-                    $('#couchpotato_apikey').val(data.api_key);
-                } else {
+                if (data === null || !data.success) {
                     notify('Settings', 'Failed to get couchpotato apikey', 'error');
-                    btn.addClass('btn-danger').append(' ').append($('<i>').addClass('icon-white icon-exclamation-sign'));
+                } else {
+                    $('#couchpotato_apikey').val(data.api_key);
                 }
             }
             if (data !== null) {
-                btn.addClass('btn-success').append(' ').append($('<i>').addClass('icon-white icon-ok'));
+                btn.addClass('btn-success').append(' ').append($('<i>').addClass('fa fa-check fa-inverse'));
                 if (data['Network.MacAddress'] && data['Network.MacAddress'] != 'Busy') {
                     $('#kodi_server_mac:visible').val(data['Network.MacAddress']);
                 }
             } else {
-                btn.addClass('btn-danger').append(' ').append($('<i>').addClass('icon-white icon-exclamation-sign'));
+                btn.addClass('btn-danger').append(' ').append($('<i>').addClass('fa fa-exclamation-circle fa-inverse'));
             }
         }).error(function () {
             btn.button('reset');
-            btn.addClass('btn-danger').append(' ').append($('<i>').addClass('icon-white icon-exclamation-sign'));
+            btn.addClass('btn-danger').append(' ').append($('<i>').addClass('fa fa-exclamation-circle fa-inverse'));
         });
     });
+
     $('input, radio, select, button').bind('change input', function (e) {
         $('.btn-test').button('reset').removeClass('btn-success btn-danger');
     });
@@ -100,6 +104,9 @@ $(document).ready(function () {
                     if (data === null) return;
                     notify('myPlex', data, 'info');
                 });
+            }
+            if ($('#newznab_indexer_id').is(":visible")) {
+                newznab_update_indexer(0);
             }
 
         }).done(function () {
@@ -128,7 +135,7 @@ $(document).ready(function () {
         $('button:reset:visible').html('Clear').removeClass('btn-danger').unbind();
         var item = $(this);
         var id = item.val();
-        if (id === 0) $('button:reset:visible').trigger('click');
+        if (id == 0) $('button:reset:visible').trigger('click');
         $.get(WEBDIR + 'kodi/getserver?id=' + id, function (data) {
             if (data === null) return;
             $('#kodi_server_name').val(data.name);
@@ -146,7 +153,7 @@ $(document).ready(function () {
                 var name = item.find('option:selected').text();
                 if (!confirm('Delete ' + name)) return;
                 $.get(WEBDIR + 'kodi/delserver?id=' + id, function (data) {
-                    notify('Settings', 'Server deleted', 'info');
+                    notify('Settings', 'Server deleted', 'warning');
                     $(this).val(0);
                     item.find('option[value=' + id + ']').remove();
                     $('button:reset:visible').html('Clear').removeClass('btn-danger').unbind();
@@ -161,7 +168,7 @@ $(document).ready(function () {
         $('button:reset:visible').html('Clear').removeClass('btn-danger').unbind();
         var item = $(this);
         var id = item.val();
-        if (id === 0) $('button:reset:visible').trigger('click');
+        if (id == 0) $('button:reset:visible').trigger('click');
         $.get(WEBDIR + 'users/getuser?id=' + id, function (data) {
             if (data === null) return;
             $('#users_user_username').val(data.username);
@@ -171,7 +178,7 @@ $(document).ready(function () {
                 var name = item.find('option:selected').text();
                 if (!confirm('Delete ' + name)) return;
                 $.get(WEBDIR + 'users/deluser?id=' + id, function (data) {
-                    notify('Settings', name + ' deleted', 'info');
+                    notify('Settings', name + ' deleted', 'error');
                     $(this).val(0);
                     item.find('option[value=' + id + ']').remove();
                     $('button:reset:visible').html('Clear').removeClass('btn-danger').unbind();
@@ -181,12 +188,44 @@ $(document).ready(function () {
     });
     users_update_user(0);
 
+    $('input.enable-module').trigger('change');
+    $('#newznab_indexer_id').change(function () {
+        $('button:reset:visible').html('Clear').removeClass('btn-danger').unbind();
+        var item = $(this);
+        var id = item.val();
+        if (id == 0) $('button:reset:visible').trigger('click');
+        $.get(WEBDIR + 'newznab/getindexer?id=' + id, function (data) {
+            if (data === null) return;
+            $('#newznab_indexer_name').val(data['name']);
+            $('#newznab_indexer_host').val(data['host']);
+            $('#newznab_indexer_apikey').val(data.apikey);
+            if (data.use_ssl == 'on') {
+                $('#newznab_indexer_ssl').attr('checked', true);
+                $("#newznab_indexer_ssl").bootstrapSwitch('toggleState', true);
+            } else {
+                $('#newznab_indexer_ssl').attr('checked', false);
+                $("#newznab_indexer_ssl").bootstrapSwitch('toggleState', false);
+            }
+
+            $("button:reset:visible").html('Delete').addClass('btn-danger').click(function (e) {
+                var name = item.find('option:selected').text();
+                if (!confirm('Delete ' + name)) return;
+                $.get(WEBDIR + 'newznab/delindexer?id=' + id, function (data) {
+                    notify('Settings', name + ' deleted', 'error');
+                    $(this).val(0);
+                    item.find('option[value=' + id + ']').remove();
+                    $('button:reset:visible').html('Clear').removeClass('btn-danger').unbind();
+                });
+            });
+        });
+    });
+    newznab_update_indexer(0)
+
     $('#gdm_plex_servers').change(function () {
         var item = $(this);
         var id = item.val();
         $.get(WEBDIR + 'plex/GetServers?id=' + id, function (data) {
             if (data === null) return;
-            console.log(data.servers.serverName);
             $('#plex_name').val(data.servers.serverName);
             $('#plex_host').val(data.servers.ip);
             $('#plex_port').val(data.servers.port);
@@ -195,11 +234,10 @@ $(document).ready(function () {
     gdm_plex_servers(0);
 
     $('input.enable-module').trigger('change');
-        $('#tvs').change(function () {
+    $('#tvs').change(function () {
         var item = $(this);
         var id = item.val();
         $.get(WEBDIR + 'samsungtv/findtv?id=' + id, function (data) {
-            console.log(data)
             if (data === null) return;
             $('#samsungtv_name').val(data.tv_model);
             $('#samsungtv_host').val(data.host);
@@ -247,18 +285,32 @@ function users_update_user(id) {
     }, 'json');
 }
 
+function newznab_update_indexer(id) {
+    $.get(WEBDIR + 'newznab/getindexer', function (data) {
+        if (data === null) return;
+        var indexers = $('#newznab_indexer_id').empty().append($('<option>').text('New').val(0));
+        $.each(data.indexers, function (i, item) {
+            var option = $('<option>').text(item.name).val(item.id);
+            if (id == item.id) option.attr('selected', 'selected');
+            indexers.append(option);
+        });
+    }, 'json');
+    //$("[type='checkbox']").bootstrapSwitch();
+}
+
 function get_branches() {
     $.get(WEBDIR + 'update/branches', function (data) {
         var branches = $('#branch').empty();
+        if (data && !data.branches) {
+          // github has most likely sent 403..
+          branches.append($('<option>').text(data.branch).val(data.branch).attr('selected', 'selected'));
+          return false
+        }
         $.each(data.branches, function (i, item) {
             var option = $('<option>').text(item).val(item);
-            //if (data.branch == item) option.attr('selected', 'selected');
             branches.append(option);
         });
         branches.append($('<option>').text(data.branch).val(data.branch).attr('selected', 'selected'));
-        //if (!data.verified) {
-            //notify('Warning', 'Couldnt determine branch, select correct and save', 'warning');
-        //}
 
     }, 'json');
 }

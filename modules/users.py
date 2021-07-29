@@ -6,7 +6,7 @@ import cherrypy
 import logging
 from sqlobject import SQLObject, SQLObjectNotFound
 from sqlobject.col import StringCol
-from cherrypy.lib.auth2 import require, member_of
+from htpc.auth2 import require, member_of
 from htpc.manageusers import Manageusers
 
 
@@ -16,7 +16,7 @@ class Users(object):
         Manageusers.createTable(ifNotExists=True)
         htpc.MODULES.append({
             'name': 'Manage users',
-            'description': 'Add more users to HTPC-Manager. Make sure you enable authentication and have provided a master username and password in General settings, otherwise authentication will not be used.',
+            'description': '<div class="alert alert-block alert-danger"><i class="fa fa-exclamation-triangle fa-fw"></i> Make sure you enable authentication and provide a master username and password in General settings, otherwise authentication will not be used.</div>',
             'isThirdParty': False,
             'id': 'users',
             'action': htpc.WEBDIR + 'users/setusers',
@@ -24,9 +24,8 @@ class Users(object):
                 {'type': 'select',
                  'label': 'User',
                  'name': 'users_user_id',
-                 'options': [
-                    {'name': 'New', 'value': 0}
-                ]},
+                 'options': [{'name': 'New', 'value': 0}]
+                },
                 {'type': 'text',
                  'label': 'Username',
                  'name': 'users_user_username'},
@@ -36,31 +35,30 @@ class Users(object):
                 {'type': 'select',
                  'label': 'Role',
                  'name': 'users_user_role',
-                 'desc': 'Admin users can change settings while normal users can only view pages.',
+                 'desc': 'Admin users can change settings whilst normal users can only view pages.',
                  'options': [
-                    {'name': 'user', 'value': 'user'},
-                    {'name': 'admin', 'value': 'admin'}
+                        {'name': 'restricted user', 'value': 'restricted_user'},
+                        {'name': 'user', 'value': 'user'},
+                        {'name': 'admin', 'value': 'admin'}
                     ]
                 }
             ]
         })
 
     @cherrypy.expose()
-    @require(member_of("admin"))
-    def index(self):
-        return htpc.LOOKUP.get_template('manageusers.html').render(scriptname='manageusers')
-
-    @cherrypy.expose()
-    @require(member_of("admin"))
+    @require(member_of(htpc.role_admin))
     def setusers(self, users_user_id, users_user_username, users_user_password, users_user_role):
         if users_user_id == "0":
             self.logger.debug('Creating Manage users in db')
             try:
                 Manageusers(username=users_user_username,
-                    password=users_user_password,
-                    role=users_user_role)
+                            password=users_user_password,
+                            role=users_user_role)
+
+                htpc.BLACKLISTWORDS.append(users_user_password)
                 return 'hack'
-            except Exception, e:
+
+            except Exception as e:
                 self.logger.debug('Failed to create %s %s' % (users_user_username, e))
                 return
         else:
@@ -70,12 +68,12 @@ class Users(object):
                 users.password = users_user_password
                 users.role = users_user_role
                 return 'hack'
-            except SQLObjectNotFound, e:
+            except SQLObjectNotFound as e:
                 self.logger.debug('Failed to update username on %s' % users_user_username)
                 return
 
     @cherrypy.expose()
-    @require(member_of("admin"))
+    @require(member_of(htpc.role_admin))
     @cherrypy.tools.json_out()
     def getuser(self, id=None):
         if id:
@@ -90,12 +88,14 @@ class Users(object):
         users = []
         for s in Manageusers.select():
             users.append({'id': s.id, 'name': s.username})
-        if len(users) < 1:
+
+        if not users:
             return
+
         return {'users': users}
 
     @cherrypy.expose()
-    @require(member_of("admin"))
+    @require(member_of(htpc.role_admin))
     def deluser(self, id):
         """ Delete a user """
         self.logger.debug("Deleting user " + str(id))

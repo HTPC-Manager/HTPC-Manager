@@ -10,10 +10,7 @@ settings =  htpc.settings
         <legend>${legend}</legend>
         % endif
         % if description:
-          <div class="alert alert-block alert-info">
-          <h4>Module description:</h4>
           ${description}
-          </div>
         % endif
         % for field in fields:
         <div class="control-group">
@@ -21,11 +18,11 @@ settings =  htpc.settings
             <div class="controls">
                 % if field.get('type') in ['text', 'password']:
                 <% value = field.get('value','') if settings.get(field.get('name'), None) == None else settings.get(field.get('name')) %>
-                <% placeholder = field.get('placeholder') if field.get('placeholder') else '' %>
-                <input type="${field.get('type')}" name="${field.get('name')|h, entity}" id="${field.get('name')|h, entity}" placeholder="${placeholder|h, entity}" value="${value|h, entity}"/>
+                ##<% placeholder = field.get('placeholder') if field.get('placeholder') else '' %>
+                <input type="${field.get('type')}" name="${field.get('name')|h, entity}" id="${field.get('name')|h, entity}" autocapitalize="off" value="${value|h, entity}"/>
                 % elif field.get('type') == 'bool':
                 <% checked = field.get('checked',0) if settings.get(field.get('name'), None) == None else settings.get(field.get('name')) %>
-                <input type="checkbox" name="${field.get('name')|h, entity}" id="${field.get('name')|h, entity}"${
+                <input type="checkbox" name="${field.get('name')}" id="${field.get('name')}"${
                 ' checked="checked"' if checked else ''}${
                 ' class="enable-module"' if field.get('name').endswith('enable') else ''}/>
                 % elif field.get('type') == 'select':
@@ -41,7 +38,7 @@ settings =  htpc.settings
                 </select>
                 % endif
                 % if field.get('desc'):
-                    <span class="help-block"><div class="span3 gutmarginleft">${field.get('desc')}</div></span>
+                    <i class="fa fa-question-circle settingstooltip" title data-original-title="${field.get('desc')}"></i>
                 % endif
                 % if field.get('fbutton'):
                     <a href="${field.get('fbutton')[0]}" class="btn ajax-confirm" title="${field.get('fbutton')[1]}">${field.get('fbutton')[2]}</a>

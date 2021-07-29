@@ -5,9 +5,8 @@ import cherrypy
 import htpc
 import logging
 import requests
-from cherrypy.lib.auth2 import require
-
-from urllib import urlencode
+from htpc.auth2 import require, member_of
+from urllib.parse import urlencode
 from json import loads
 from htpc.helpers import get_image, striphttp
 
@@ -27,7 +26,7 @@ class Headphones(object):
                 {'type': 'text', 'label': 'Basepath', 'name': 'headphones_basepath'},
                 {'type': 'text', 'label': 'API key', 'name': 'headphones_apikey'},
                 {'type': 'bool', 'label': 'Use SSL', 'name': 'headphones_ssl'},
-                {"type": "text", "label": "Reverse proxy link", "placeholder": "", "desc":"Reverse proxy link ex: https://domain.com/hp", "name": "headphones_reverse_proxy_link"}
+                {'type': 'text', "label": 'Reverse proxy link', 'placeholder': '', 'desc': 'Reverse proxy link ex: https://domain.com/hp', 'name': 'headphones_reverse_proxy_link'}
 
             ]
         })
@@ -37,7 +36,6 @@ class Headphones(object):
     def index(self):
         template = htpc.LOOKUP.get_template('headphones.html')
         settings = htpc.settings
-        url = self._build_url()
 
         return template.render(
             scriptname='headphones',
@@ -46,17 +44,17 @@ class Headphones(object):
             name=settings.get('headphones_name', 'Headphones')
         )
 
-
     def webinterface(self):
-        url = self._build_url
+        url = Headphones._build_url()
         if htpc.settings.get('headphones_reverse_proxy_link'):
             url = htpc.settings.get('headphones_reverse_proxy_link')
         return url
+
     @cherrypy.expose()
     @require()
     def GetThumb(self, url=None, thumb=None, h=None, w=None, o=100):
         """ Parse thumb to get the url and send to htpc.proxy.get_image """
-        self.logger.debug("Trying to fetch image via %s", url)
+        self.logger.debug("Trying to fetch image via %s" % url)
         if url is None and thumb is None:
             # To stop if the image is missing
             return
@@ -73,8 +71,11 @@ class Headphones(object):
         for a in response['albums']:
             a['StatusText'] = _get_status_icon(a['Status'])
             a['can_download'] = True if a['Status'] not in ('Downloaded', 'Snatched', 'Wanted') else False
+            a['can_skip'] = True if a['Status'] not in ('Downloaded', 'Snatched', 'Skipped') else False
+            a['can_trynew'] = True if a['Status'] in ('Snatched') else False
 
         template = htpc.LOOKUP.get_template('headphones_view_artist.html')
+
         return template.render(
             scriptname='headphones_view_artist',
             artist_id=artist_id,
@@ -141,7 +142,6 @@ class Headphones(object):
             command=command,
         )
 
-
     @cherrypy.expose()
     @cherrypy.tools.json_out()
     @require()
@@ -153,6 +153,12 @@ class Headphones(object):
     @require()
     def GetWantedList(self):
         return self.fetch('getWanted')
+        
+    @cherrypy.expose()
+    @cherrypy.tools.json_out()
+    @require()
+    def GetUpcomingList(self):
+        return self.fetch('getUpcoming')
 
     @cherrypy.expose()
     @cherrypy.tools.json_out()
@@ -164,22 +170,22 @@ class Headphones(object):
             return self.fetch('findAlbum&%s' % urlencode({'name': name.encode(encoding='UTF-8',errors='strict')}))
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     def RefreshArtist(self, artistId):
         return self.fetch('refreshArtist&id=%s' % artistId, text=True)
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     def DeleteArtist(self, artistId):
         return self.fetch('delArtist&id=%s' % artistId, text=True)
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     def PauseArtist(self, artistId):
         return self.fetch('pauseArtist&id=%s' % artistId, text=True)
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     def ResumeArtist(self, artistId):
         return self.fetch('resumeArtist&id=%s' % artistId, text=True)
 
@@ -192,7 +198,7 @@ class Headphones(object):
         return self.fetch('queueAlbum&id=%s' % albumId, text=True)
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     def UnqueueAlbum(self, albumId):
         return self.fetch('unqueueAlbum&id=%s' % albumId, text=True)
 
@@ -222,34 +228,34 @@ class Headphones(object):
         return self.fetch('getAlbum&id=%s' % id)
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     def ForceSearch(self):
         return self.fetch('forceSearch', text=True)
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     def ForceProcess(self, dir=None):
         if dir:
             return self.fetch('forceProcess?dir=%s' % dir, text=True)
         return self.fetch('forceProcess', text=True)
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     def ForceActiveArtistsUpdate(self):
         return self.fetch('forceActiveArtistsUpdate', text=True)
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     def ShutDown(self):
         return self.fetch('shutdown', text=True)
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     def UpDate(self):
         return self.fetch('update', text=True)
 
     @cherrypy.expose()
-    @require()
+    @require(member_of(htpc.role_user))
     def ReStart(self):
         return self.fetch('restart', text=True)
 
@@ -273,10 +279,11 @@ class Headphones(object):
             if img or text:
                 json = False
             result = ''
-            self.logger.info('calling api @ %s' % url)
+            self.logger.debug('calling api @ %s' % url)
             response = requests.get(url, timeout=30, verify=False)
 
             if response.status_code != 200:
+                response.raise_for_status()
                 self.logger.error('failed to contact headphones')
                 return
 
@@ -290,22 +297,26 @@ class Headphones(object):
                 result = response.json()
 
             self.logger.debug('Response: %s' % result)
+
             return result
 
         except Exception as e:
             self.logger.error("Error calling api %s: %s" % (url, e))
 
-    @cherrypy.tools.json_out()
     @cherrypy.expose()
+    @cherrypy.tools.json_out()
     @require()
     def ping(self,
              headphones_enable, headphones_name,
              headphones_host, headphones_port,
              headphones_basepath,
              headphones_apikey,
-             headphones_ssl=False):
+             headphones_ssl=False,
+             **kwargs):
 
-        url = self._build_url(
+        self.logger.debug('Attemping to ping headphones')
+
+        url = Headphones._build_url(
             headphones_ssl,
             headphones_host,
             headphones_port,
@@ -322,15 +333,15 @@ def _get_status_icon(status):
     red = ["Unprocessed"]
 
     mapsicon = {
-        'Downloaded': 'icon-download-alt',
-        'Active': 'icon-repeat',
-        'Error': 'icon-bell',
-        'Paused': 'icon-pause',
-        'Snatched': 'icon-share-alt',
-        'Skipped': 'icon-fast-forward',
-        'Wanted': 'icon-heart',
-        'Processed': 'icon-ok',
-        'Unprocessed': 'icon-exclamation-sign'
+        'Downloaded': 'fa fa-download',
+        'Active': 'fa fa-rotate-right',
+        'Error': 'fa fa-bell-o',
+        'Paused': 'fa fa-pause',
+        'Snatched': 'fa fa-share-alt',
+        'Skipped': 'fa fa-fast-forward',
+        'Wanted': 'fa fa-heart',
+        'Processed': 'fa fa-check',
+        'Unprocessed': 'fa fa-exclamation-circle'
     }
 
     if not status:
@@ -348,6 +359,6 @@ def _get_status_icon(status):
     else:
         pass
 
-    fmt = '<span class="label %s"><i class="%s icon-white"></i> %s</span>'
+    fmt = '<span class="label %s"><i class="%s fa-inverse"></i> %s</span>'
 
     return fmt % (label, mapsicon[status], status)

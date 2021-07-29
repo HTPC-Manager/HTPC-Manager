@@ -11,10 +11,21 @@ $(document).ready(function() {
     showstats();
 
 
-    $('#add_show_button').click(function() {
-        $(this).attr('disabled', true);
-        searchTvDb($('#add_show_name').val());
+    var addShowAction = function () {
+            var query = $('#add_show_name').val();
+            if (query) {
+                $('#add_show_button').attr('disabled', true);
+                searchTvDb(query);
+            }
+        };
+
+    $('#add_show_name').keyup(function(event){
+        if(event.keyCode == 13){
+            addShowAction();
+        }
     });
+    $('#add_show_button').click(addShowAction);
+
 
     $('#add_tvdbid_button').click(function() {
         addShow($('#add_show_select').val(), $('#add_show_select').find('option:selected').attr(
@@ -56,17 +67,16 @@ function loadShows() {
                     $('<td>').html(sickrageStatusLabel(tvshow.quality)));
                 $('#tvshows_table_body').append(row);
             });
-            $('#tvshows_table_body').parent().trigger('update');
-            $('#tvshows_table_body').parent().trigger("sorton", [
-                [
-                    [0, 1]
-                ]
-            ]);
+
+            //$('#tsickrage').trigger('update')
+
         },
         complete: function() {
             $('.spinner').hide();
+            $('#tsickrage').trigger('update')
         }
     });
+
 }
 
 //modal
@@ -107,7 +117,7 @@ function loadShow(indexerid) {
 
             modalContent = $('<div>');
             modalContent.append(
-                $('<img>').attr('src', WEBDIR + 'sickrage/GetBanner/' + indexerid).addClass(
+                $('<img>').attr('src', WEBDIR + 'sickrage/GetBanner?indexerid=' + indexerid).addClass(
                     'img-rounded'),
                 $('<hr>'),
                 table);
@@ -161,16 +171,16 @@ function loadNextAired(options) {
                     loadShow(tvshow.indexerid);
                 });
 
-                var img = makeIcon('icon-info-sign', tvshow.ep_plot);
+                var img = makeIcon('fa fa-info-circle', tvshow.ep_plot);
 
                 var search_subs = $('<a>').addClass('btn btn-mini').attr('title',
-                    'Search subtitle').append($('<i>').addClass('icon-comment')).on('click',
+                    'Search subtitle').append($('<i>').addClass('fa fa-comment')).on('click',
                     function() {
                         searchsub(tvshow.indexerid, tvshow.season, tvshow.episode, tvshow.show_name + ' ' + tvshow.ep_name);
                 });
 
                 var search_link = $('<a>').addClass('btn btn-mini').attr('title',
-                        'Search new download').append($('<i>').addClass('icon-search')).on(
+                        'Search new download').append($('<i>').addClass('fa fa-search')).on(
                         'click', function() {
                             searchEpisode(tvshow.indexerid, tvshow.season, tvshow.episode, tvshow.show_name + ' ' + tvshow.ep_name);
                 });
@@ -201,16 +211,16 @@ function loadNextAired(options) {
                     loadShow(tvshow.indexerid);
                 });
 
-                var img = makeIcon('icon-info-sign', tvshow.ep_plot);
+                var img = makeIcon('fa fa-info-circle', tvshow.ep_plot);
 
                 var search_subs = $('<a>').addClass('btn btn-mini').attr('title',
-                    'Search subtitle').append($('<i>').addClass('icon-comment')).on('click',
+                    'Search subtitle').append($('<i>').addClass('fa fa-comment')).on('click',
                     function() {
                         searchsub(tvshow.indexerid, tvshow.season, tvshow.episode, tvshow.show_name + ' ' + tvshow.ep_name);
                 });
 
                 var search_link = $('<a>').addClass('btn btn-mini').attr('title',
-                        'Search new download').append($('<i>').addClass('icon-search')).on(
+                        'Search new download').append($('<i>').addClass('fa fa-search')).on(
                         'click', function() {
                             searchEpisode(tvshow.indexerid, tvshow.season, tvshow.episode, tvshow.show_name + ' ' + tvshow.ep_name);
                 });
@@ -239,15 +249,15 @@ function loadNextAired(options) {
                     loadShow(tvshow.indexerid);
                 });
 
-                var img = makeIcon('icon-info-sign', tvshow.ep_plot);
+                var img = makeIcon('fa fa-info-circle', tvshow.ep_plot);
                 var search_subs = $('<a>').addClass('btn btn-mini').attr('title',
-                    'Search subtitle').append($('<i>').addClass('icon-comment')).on('click',
+                    'Search subtitle').append($('<i>').addClass('fa fa-comment')).on('click',
                     function() {
                         searchsub(tvshow.indexerid, tvshow.season, tvshow.episode, tvshow.show_name + ' ' + tvshow.ep_name);
                 });
 
                 var search_link = $('<a>').addClass('btn btn-mini').attr('title',
-                        'Search new download').append($('<i>').addClass('icon-search')).on(
+                        'Search new download').append($('<i>').addClass('fa fa-search')).on(
                         'click', function() {
                             searchEpisode(tvshow.indexerid, tvshow.season, tvshow.episode, tvshow.show_name + ' ' + tvshow.ep_name);
                 });
@@ -375,11 +385,13 @@ function cancelAddShow() {
     $('#add_show_button').show();
 }
 
+
+
 function sickrageStatusLabel(text) {
-    var statusOK = ['Continuing', 'Downloaded', 'HD', 'HD720p', 'HD1080p'];
-    var statusInfo = ['Snatched'];
+    var statusOK = ['Continuing', 'Downloaded', 'HD', 'HDTV', 'HD720p', 'HD1080p', '720p HDTV', '1080p HDTV', '720p WEB-DL', '1080p WEB-DL', '720p BluRay', '1080p BluRay'];
+    var statusInfo = ['Snatched', 'Snatched (Best)', 'Snatched (Proper)'];
     var statusError = ['Ended', 'SD'];
-    var statusWarning = ['Skipped', 'Custom'];
+    var statusWarning = ['Skipped', 'Custom', 'Unknown'];
 
     var label = $('<span>').addClass('label').text(text);
 
@@ -409,17 +421,17 @@ function sickrageStatusIcon(iconText, white) {
         'Archived',
         'Skipped'];
     var icons = [
-        'icon-download-alt',
-        'icon-repeat',
-        'icon-share-alt',
-        'icon-time',
-        'icon-lock',
-        'icon-fast-forward'];
+        'fa fa-download',
+        'fa fa-rotate-right',
+        'fa fa-share-alt',
+        'fa fa-clock-o',
+        'fa fa-lock',
+        'fa fa-fast-forward'];
 
     if (text.indexOf(iconText) != -1) {
         var icon = $('<i>').addClass(icons[text.indexOf(iconText)]);
         if (white === true) {
-            icon.addClass('icon-white');
+            icon.addClass('fa-inverse');
         }
         return icon;
     }
