@@ -343,17 +343,18 @@ function searchTvDb(query) {
             }
             $('#add_show_select').html('');
             $.each(tvshow.data.results, function(i, opt) {
-                var indexername = (opt.tvdbid) ? 'TVDB' : 'TVRAGE';
-                var indexerkwarg = (opt.tvdbid) ? 'tvdbid' : 'tvrageid';
-                var option = $('<option>');
-                if (opt.tvrageid) {
-                    option.attr('value', opt.tvrageid).attr('data-indexer', indexerkwarg);
-                } else {
-                    option.attr('value', opt.tvdbid).attr('data-indexer', indexerkwarg);
+                var indexername;
+                if (opt.tvdbid) indexername = 'TVDB';
+                else if (opt.tvrageid) indexername = 'TVRAGE'; // not working in medusa anymore
+                else if (opt.tvmazeid) indexername = 'TVmaze'; // add show with api v1 fails in medusa
+                else if (opt.tmdbid) indexername = 'TMDB'; // add show with api v1 fails in medusa
+                if (indexername) {
+                    var option = $('<option>');
+                    var indexerkwarg = indexername.toLowerCase() + 'id';
+                    option.attr('value', opt[indexerkwarg]).attr('data-indexer', indexerkwarg);
+                    option.html(opt.name + ' (' + opt.first_aired + ') ' + indexername);
+                    $('#add_show_select').append(option);
                 }
-
-                option.html(opt.name + ' (' + opt.first_aired + ') ' + indexername);
-                $('#add_show_select').append(option);
             });
             $('#add_show_name').hide();
             $('#cancel_show_button').show();
