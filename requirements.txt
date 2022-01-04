@@ -11,7 +11,7 @@ requests-futures
 mako
 tzlocal
 xmltodict
-cherrypy<9.0
+cherrypy
 jsonrpclib-pelix
 pytz
 pyasn1
