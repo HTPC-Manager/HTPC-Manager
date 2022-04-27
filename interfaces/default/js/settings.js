@@ -145,6 +145,10 @@ $(document).ready(function () {
             $('#kodi_server_password').val(data.password);
             $('#kodi_server_mac').val(data.mac);
 			$('#kodi_server_starterport').val(data.starterport);
+            $('#kodi_server_vlc_enabled').val(data.vlc_enabled);
+            $('#kodi_server_vlc_port').val(data.vlc_port);
+            $('#kodi_server_vlc_password').val(data.vlc_password);
+            $('#kodi_server_vlc_transcode_port').val(data.vlc_transcode_port);
             $("button:reset:visible").html('Delete').addClass('btn-danger').click(function (e) {
                 var name = item.find('option:selected').text();
                 if (!confirm('Delete ' + name)) return;

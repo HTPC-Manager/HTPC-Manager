@@ -265,6 +265,15 @@ function loadMovie(movie) {
             hideModal();
         }
     }
+    if (kodi_vod_enabled){
+        $.extend(buttons,{
+            'Play in Browser' : function(){
+                window.open(WEBDIR + 'kodi/player/?type=movie&id=' + movie.movieid +'&serverID='+ $('#servers').children('option:selected').attr('value') +
+                                '&transcode=' + vlc_transcode, 'video_player', "menubar=no,location=no,resizable=yes,scrollbars=no,status=no"
+                            );
+            }
+        });
+    }
     if (movie.imdbnumber) {
         $.extend(buttons,{
             'IMDb' : function() {
@@ -493,6 +502,30 @@ function loadEpisodes(options) {
         }
     });
     $('#episode-grid').slideDown()
+}
+
+function loadEpisode(episode) {
+    var poster = WEBDIR + 'kodi/GetThumb?w=200&h=300&thumb='+encodeURIComponent(episode.thumbnail)
+    var info = $('<div>');
+    info.append($('<p>').html('<b>Plot:</b> ' + episode.plot));
+    var buttons = {
+        'Play' : function() {
+            playItem(episode.episodeid, 'episode');
+            hideModal();
+        }
+    }
+    if (kodi_vod_enabled){
+        $.extend(buttons,{
+            'Play in Browser' : function(){
+                window.open(WEBDIR + 'kodi/player/?type=episode&id=' + episode.episodeid +'&serverID='+ $('#servers').children('option:selected').attr('value') +
+                                '&transcode=' + vlc_transcode, 'video_player', "menubar=no,location=no,resizable=yes,scrollbars=no,status=no"
+                            );
+            }
+        });
+    }
+    showModal(episode.showtitle + ' (' + episode.season + 'x' + episode.episode + ')', $('<div>').append(
+        info
+    ), buttons);
 }
 
 var artistLoad = {

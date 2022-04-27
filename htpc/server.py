@@ -33,7 +33,10 @@ def start():
         'server.socket_port': htpc.PORT,
         'log.screen': False,
         'server.thread_pool': 15,
-        'server.socket_queue_size': 10
+        'server.socket_queue_size': 10,
+        'tools.sessions.on': True, #we need sessions always enabled to store a uuid for each session, so we can have multiple VLC transcoding (1 for each session)
+        'tools.sessions.timeout': 43200,
+        'tools.sessions.httponly': True
     })
 
     # Wrap htpc manager in secure headers.
@@ -59,10 +62,7 @@ def start():
         logger.debug('Updating cherrypy config, activating sessions and auth')
 
         cherrypy.config.update({
-            'tools.sessions.on': True,
-            'tools.auth.on': True,
-            'tools.sessions.timeout': 43200,
-            'tools.sessions.httponly': True
+            'tools.auth.on': True
             #'tools.sessions.secure': True #  Auth does not work with this on #TODO
         })
 

@@ -29,3 +29,5 @@ pyopenssl
 paramiko
 # Needed for S.M.A.R.T., >=1.0.6 for Python 3.8 compatibility
 pySMART>=1.0.6
+# Needed for converting subtitles on Kodi VOD
+pycaption

@@ -1,0 +1,43 @@
+<%!
+import htpc
+settings = htpc.settings
+WEBDIR = htpc.WEBDIR
+%><!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>HTPC Manager - ${title}</title>
+    <link href="${htpc.WEBDIR}favicon.ico" type="image/x-icon" rel="icon">
+    <link rel="apple-touch-icon" href="${htpc.WEBDIR}img/ios/homescreen.png">
+    <link rel="stylesheet" href="${htpc.WEBDIR}js/libs/mediaelement/mediaelementplayer.css" />
+    <link href="${htpc.WEBDIR}css/font-awesome.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="content">
+            <video width="800" height="600" id="player" controls="controls" preload="none" autoplay="true" >
+               <source src="${videoUrl}" />
+                % for sub in subtitles:
+                    <track kind="subtitles" src="" data-src="${WEBDIR}kodi/subtitle/?serverID=${serverID}&subpath=${sub['path']}" srclang="${sub['srclang']}" label="${sub['label']} (${sub['type']})" />
+                % endfor
+            </video>
+        </div>
+    </div>
+    <script>
+        WEBDIR = '${htpc.WEBDIR}';
+        plugins = [${plugins}];
+        mode = '${mode}';
+        features = ['playpause','current','progress','duration','method','tracks','VLCtracks',${features}'volume','fullscreen'];
+        qualities = {${qualities}};
+        quality = ${quality};
+        currTime = ${currTime};
+        duration = ${duration};
+        serverID = ${serverID};
+        uniqueID = '${uniqueID}';
+        start = ${start};
+        transcode = ${transcode};
+    </script>
+    <script src="${htpc.WEBDIR}js/libs/jquery.min.js"></script>
+    <script src="${htpc.WEBDIR}js/libs/mediaelement/mediaelement-and-player.js"></script>
+    <script src="${htpc.WEBDIR}js/kodiplayer.js"></script>
+</body>
+</html>
