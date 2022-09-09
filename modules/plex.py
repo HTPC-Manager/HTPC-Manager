@@ -851,7 +851,7 @@ class Plex(object):
             if username and password:
                 self.logger.debug('Fetching auth token')
                 headers = {}
-               headers['Authorization'] = 'Basic %s' % base64.encodebytes(credentials.encode()).decode().replace('\n', '')
+                headers['Authorization'] = 'Basic %s' % base64.encodebytes(credentials.encode()).decode().replace('\n', '')
                 headers['X-Plex-Client-Identifier'] = str(hex(getnode()))
                 headers['X-Plex-Product'] = 'HTPC Manager'
                 headers['X-Plex-Device'] = 'HTPC Manager'
