@@ -10,9 +10,9 @@ A python based web application to manage the software on your HTPC. HTPC Manager
 
 ![Screenshot](http://i.imgur.com/6QEWPFf.png)
 
-Requires Python 3.x (3.5 minimum, most likely) and crapload of Python libs. Just make sure that CherryPy version is < 9.0 (as stated in requirements.txt).
+Requires Python 3.7 or above and crapload of Python libs.
 
-Start with ```python3 Htpc.py```
+Start with `python3 Htpc.py`
 
 A [virtual environment](https://docs.python.org/3/library/venv.html) is strongly encouraged.
 
@@ -90,7 +90,7 @@ If you still have problems: INCLUDE THIS IN YOUR ISSUE
 
 #### How to enable detailed logs
 1. Shutdown HTPC Manager
-2. Start Htpc.py --loglevel debug (Do NOT start with --dev)
+2. Start `Htpc.py --loglevel debug`
 3. Start HTPC Manager and wait for error to occur again/reproduce it
 
 #### Installation
