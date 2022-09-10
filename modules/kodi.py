@@ -886,4 +886,4 @@ class Kodi(object):
         """ Generate a base64 HTTP auth string based on settings """
         if self.current.username and self.current.password:
             credentials = f'{quote_plus(self.current.username)}:{quote_plus(self.current.password)}'
-            return base64.encodebytes(credentials.encode()).decode().replace('\n', '')
+            return base64.b64encode(credentials.encode()).decode()
