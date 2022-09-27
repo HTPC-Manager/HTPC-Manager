@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import time
-import json
+from time import time
+from json import dumps
 from datetime import datetime
 import socket
 import platform
@@ -11,6 +11,7 @@ import cherrypy
 import htpc
 import logging
 import os
+from ctypes import windll
 import requests
 from htpc.auth2 import require, member_of
 
@@ -25,7 +26,7 @@ def admin():
     try:
         is_admin = os.getuid() == 0
     except AttributeError:
-        is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+        is_admin = windll.shell32.IsUserAnAdmin() != 0
     return is_admin
 
 
@@ -126,7 +127,7 @@ class Stats(object):
                 return uptime
             else:
                 cherrypy.response.headers['Content-Type'] = 'application/json'
-                return json.dumps(d)
+                return dumps(d)
 
         except Exception as e:
             self.logger.error('Could not get uptime %s' % e)
@@ -278,7 +279,7 @@ class Stats(object):
                     r_time = datetime.now() - datetime.fromtimestamp(p.dict['create_time'])
                 except TypeError:
                     # for shitty os
-                    r_time = time.time()
+                    r_time = time()
 
                 r_time = str(r_time)[:-7]
                 p.dict['r_time'] = r_time
@@ -365,7 +366,7 @@ class Stats(object):
                 return duser
             else:
                 cherrypy.response.headers['Content-Type'] = 'application/json'
-                return json.dumps(duser)
+                return dumps(duser)
 
         except Exception as e:
             self.logger.error('Pulling logged in info %s' % e)
@@ -384,7 +385,7 @@ class Stats(object):
                 return local_ip
             else:
                 cherrypy.response.headers['Content-Type'] = 'application/json'
-                return json.dumps(d)
+                return dumps(d)
 
         except Exception as e:
             self.logger.error('Pulling  local ip %s' % e)
@@ -414,24 +415,24 @@ class Stats(object):
     def get_external_ip(self, dash=False):
         if self.last_check is None:
             self.last_check_ip = self._get_external_ip()
-            self.last_check = time.time()
+            self.last_check = time()
 
         # only check ip each 30 min as they telling us to fuck off (http 429)
         # else retuned the cached ip
-        if time.time() - self.last_check >= 3000:
+        if time() - self.last_check >= 3000:
             self.last_check_ip = self._get_external_ip()
-            self.last_check = time.time()
+            self.last_check = time()
 
             if dash:
                 return self.last_check_ip
             else:
                 cherrypy.response.headers['Content-Type'] = 'application/json'
-                return json.dumps({'externalip': self.last_check_ip})
+                return dumps({'externalip': self.last_check_ip})
         else:
             if dash:
                 return self.last_check_ip
             cherrypy.response.headers['Content-Type'] = 'application/json'
-            return json.dumps({'externalip': self.last_check_ip})
+            return dumps({'externalip': self.last_check_ip})
 
     @cherrypy.expose()
     @require()
@@ -662,7 +663,7 @@ class Stats(object):
                 if script == f:
                     if prefix:
                         script = '%s %s' % (prefix, script)
-                    start = time.time()
+                    start = time()
                     try:
                         p = subprocess.Popen(script, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                              shell=True, cwd=os.path.join(htpc.DATADIR, 'scripts/'))
@@ -679,6 +680,6 @@ class Stats(object):
                     except OSError as out:
                         self.logger.error('Failed to run %s error %s' % (script, out))
 
-                    end = time.time() - start
+                    end = time() - start
                     d = {'runtime': end, 'result': out, 'exit_status': status}
                     return d
