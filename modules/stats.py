@@ -282,9 +282,6 @@ class Stats(object):
 
                 r_time = str(r_time)[:-7]
                 p.dict['r_time'] = r_time
-                # fix for windows process name
-                if os.name == 'nt':
-                    p.dict['name'] = psutil._psplatform.cext.proc_name(p.pid)
 
                 try:
                     procs_status[p.dict['status']] += 1
