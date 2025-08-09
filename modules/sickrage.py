@@ -212,7 +212,7 @@ class Sickrage(object):
     @require()
     def SearchShow(self, query):
         self.logger.debug('Searching tvdb and tvrage for %s query')
-        return self.fetch('sb.searchindexers&indexer=0&name=%s' % quote(query), False, 60)
+        return self.fetch('sb.searchtvdb&indexer=0&name=%s' % quote(query), False, 60)
 
     @cherrypy.expose()
     @require()
