@@ -5,7 +5,7 @@ import os
 import platform
 import hashlib
 import htpc
-import imghdr
+import filetype
 import logging
 from cherrypy.lib.static import serve_file
 from urllib.request import Request, urlopen
@@ -100,10 +100,10 @@ def get_image(url, height=None, width=None, opacity=100, mode=None, auth=None, h
 
     # Load file from disk
     if image is not None:
-        imagetype = imghdr.what(os.path.abspath(image))
+        imagetype = filetype.guess(os.path.abspath(image))
         if imagetype is None:
-            imagetype = 'image/jpeg'
-        return serve_file(path=image, content_type=imagetype)
+            return serve_file(path=image, content_type='image/jpeg')
+        return serve_file(path=image, content_type=imagetype.mime)
     if missing_image:
         # full fp to missing image
         return serve_file(path=missing_image, content_type='image/jpeg')
@@ -138,7 +138,7 @@ class CacheImgDownload(workerpool.Job):
 def cache_resize_image(item):
     #imglist = [{'hash': '123', 'url': 'xxx', 'fp': 'filepath', 'resize': [(w, h), (w, h)]}]
     fp = item['fp']
-    imagetype = imghdr.what(fp)
+    imagetype = filetype.guess(fp)
     if imagetype:
         # Open orginal image
         im = Image.open(fp)
@@ -147,10 +147,10 @@ def cache_resize_image(item):
                 im = im.resize(r, Image.ANTIALIAS)
                 resized = '%s_w%s_h%s_o_%s_%s' % (fp, r[0], r[1], None, None)
 
-                if imagetype.lower() == 'jpeg' or 'jpg':
+                if imagetype.extension.lower() == 'jpeg' or 'jpg':
                     im.save(resized, 'JPEG', quality=95)
                 else:
-                    im.save(resized, imagetype)
+                    im.save(resized, imagetype.extension)
 
 
 @timeit_func
@@ -252,7 +252,7 @@ def download_image(url, dest, auth=None, headers=None):
 def resize_image(img, height, width, opacity, mode, dest):
     ''' Resize image, set opacity and save to disk '''
     try:
-        imagetype = imghdr.what(img)
+        imagetype = filetype.guess(img)
         im = Image.open(img)
     except IOError as e:
         logger.error('Failed to open image %s dest %s %s' % (img, dest, e))
@@ -279,10 +279,10 @@ def resize_image(img, height, width, opacity, mode, dest):
     if mode:
         im = im.convert(str(mode))
 
-    if imagetype and imagetype.lower() == 'jpeg' or 'jpg':
+    if imagetype and imagetype.extension.lower() == 'jpeg' or 'jpg':
         im.save(dest, 'JPEG', quality=95)
     else:
-        im.save(dest, imagetype)
+        im.save(dest, imagetype.extension)
 
     return dest
 

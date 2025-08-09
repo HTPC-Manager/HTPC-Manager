@@ -17,6 +17,7 @@ pytz
 pyasn1
 sqlobject
 workerpool
+filetype>=1.2.0
 
 # HTPC Manager runs without these, but misses some features:
 # Needed for image resize etc
