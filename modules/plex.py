@@ -846,12 +846,32 @@ class Plex(object):
 
             username = username or htpc.settings.get('plex_username', '')
             password = password or htpc.settings.get('plex_password', '')
+<<<<<<< HEAD
+<<<<<<< HEAD
             credentials = f'{quote_plus(username)}:{quote_plus(password)}'
+=======
+            credentials = f'{quote_plus(self.current.username)}:{quote_plus(self.current.password)}'
+>>>>>>> adding changes to correct python2->python3 login for plex module
+=======
+            credentials = f'{quote_plus(username)}:{quote_plus(password)}'
+>>>>>>> typo corrections
 
             if username and password:
                 self.logger.debug('Fetching auth token')
                 headers = {}
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
                 headers['Authorization'] = f'Basic {base64.b64encode(credentials.encode()).decode()}'
+=======
+               headers['Authorization'] = 'Basic %s' % base64.encodebytes(credentials.encode()).decode().replace('\n', '')
+>>>>>>> adding changes to correct python2->python3 login for plex module
+=======
+                headers['Authorization'] = 'Basic %s' % base64.encodebytes(credentials.encode()).decode().replace('\n', '')
+>>>>>>> more typo corrections
+=======
+                headers['Authorization'] = f'Basic {base64.b64encode(credentials.encode()).decode()}'
+>>>>>>> Update modules/plex.py
                 headers['X-Plex-Client-Identifier'] = str(hex(getnode()))
                 headers['X-Plex-Product'] = 'HTPC Manager'
                 headers['X-Plex-Device'] = 'HTPC Manager'

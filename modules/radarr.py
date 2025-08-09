@@ -71,7 +71,7 @@ class Radarr(object):
 
             headers = {'X-Api-Key': htpc.settings.get('radarr_apikey', '')}
 
-            url = 'http%s://%s:%s%sapi/%s' % (ssl,
+            url = 'http%s://%s:%s%sapi/v3/%s' % (ssl,
                                               host, port, radarr_basepath, path)
 
             if banner:
@@ -80,18 +80,15 @@ class Radarr(object):
                 return get_image(url, headers=headers)
 
             if type == 'post':
-                r = requests.post(url, data=dumps(
-                    data), headers=headers, verify=False)
+                r = requests.post(url, json=data, headers=headers, verify=False)
                 return r.content
 
             elif type == 'put':
-                r = requests.put(url, data=dumps(
-                    data), headers=headers, verify=False)
+                r = requests.put(url, json=data, headers=headers, verify=False)
                 return r.content
 
             elif type == 'delete':
-                r = requests.delete(url, data=dumps(
-                    data), headers=headers, verify=False)
+                r = requests.delete(url, json=data, headers=headers, verify=False)
                 return r.content
 
             else:
@@ -114,7 +111,7 @@ class Radarr(object):
 
             headers = {'X-Api-Key': str(radarr_apikey)}
 
-            url = 'http%s://%s:%s%sapi/system/status' % (
+            url = 'http%s://%s:%s%sapi/v3/system/status' % (
                 ssl, striphttp(radarr_host), radarr_port, radarr_basepath)
 
             result = requests.get(url, headers=headers, verify=False)
@@ -209,7 +206,7 @@ class Radarr(object):
     @require()
     @cherrypy.tools.json_out()
     def Profile(self):
-        return self.fetch('profile')
+        return self.fetch('qualityprofile')
 
     @cherrypy.expose()
     @require(member_of(htpc.role_user))
@@ -286,7 +283,7 @@ class Radarr(object):
             d['profileId'] = int(qualityProfileId)
             d['titleSlug'] = movie['titleSlug']
             d['rootFolderPath'] = rootfolder
-            d['monitored'] = monitored
+            d['monitored'] = bool(monitored)
             d['images'] = [] # not sure if this is actually required, radarr docs says it is so it's passed TODO voodoo
             movie.update(d)
 
