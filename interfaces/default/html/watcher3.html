@@ -1,0 +1,80 @@
+<%inherit file="base.html"/>
+<% settings = self.attr.settings %>
+<div class="container-fluid">
+    <div class="content maincontent">
+        <h1 class="page-header page-title">
+            <a href="${webinterface}" ${'class="useiframe"' if settings.get('app_open_otherlink_in_iframe') else 'target="_blank"'} title="Open original Watcher3 interface">${settings.get('watcher3_name', 'Watcher')}</a>
+            <div class="btn-group pull-right">
+                 <a href="#" class="btn dropdown-toggle" data-hover="dropdown" data-toggle="dropdown"><i class="fa fa-wrench fa-lg"></i>
+	                <i class="fa fa-chevron-down"></i></a>
+                    <ul class="dropdown-menu pull-right"> <!-- Skeleton -->
+                        <li><a href="SearchAllWanted" class="ajax-confirm" title="Search all wanted movies"><i class="fa fa-search fa-fw"></i> Search all wanted movies</a></li>
+                        <li><a id="postprocess" href="#" title="Postprocess"><i class="fa fa-hdd-o fa-fw"></i> Postprocess</a></li>
+                        <li class="divider"></li>
+                        <li><a id= "cp_update" href="#" title="Update Watcher"><i class="fa fa-eye fa-fw"></i> Update</a></li>
+                        <li class="divider"></li>
+                        <li><a href="Restart" class="ajax-confirm" title="Restart Watcher"><i class="fa fa-refresh fa-fw"></i> Restart</a></li>
+                        <li><a href="Shutdown" class="ajax-confirm" title="Shutdown Watcher"><i class="fa fa-power-off fa-fw"></i> Shutdown</a></li>
+                    </ul>
+            </div>
+        </h1>
+        <form id="searchform" class="well form-inline">
+            <input type="text" id="moviename" class="span6"  placeholder="Add new movie" />
+            <button type="submit" class="btn btn-success"><i class="fa fa-search fa-fw"></i> Search</button>
+        </form>
+        <ul class="nav nav-tabs">
+			<li><a href="#library" data-toggle="tab">Library</a></li>
+            <li><a href="#wanted" data-toggle="tab">Wanted</a></li>
+            <li><a href="#dashboardsoon" data-toggle="tab">Available soon</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-hover="dropdown" data-toggle="dropdown">Charts
+                <i class="fa fa-chevron-down"></i></a>
+                <ul class="dropdown-menu">
+                    <li><a href="#popular" data-toggle="tab">Popular</a></li>
+                    <li><a href="#now_playing" data-toggle="tab">Now Playing</a></li>
+                    <li><a href="#top_rated" data-toggle="tab">Top Rated</a></li>
+                    <li><a href="#upcoming" data-toggle="tab">Upcoming</a></li>
+                </ul>
+            </li>
+            <li class="hidden"><a href="#result" data-toggle="tab">Search</a></li>
+        </ul>
+        <div class="tab-content">
+            <div id="library" class="tab-pane">
+                <ul id="library-grid" class="thumbnails"></ul>
+            </div>
+            <div id="wanted" class="tab-pane">
+                <ul id="wanted-grid" class="thumbnails"></ul>
+            </div>
+            <div id="dashboardsoon" class="tab-pane">
+                <ul id="dashboardsoon-grid" class="thumbnails"></ul>
+            </div>
+            <div id="popular" class="themoviedb-category tab-pane">
+                <ul id="popular-grid" class="thumbnails"></ul>
+            </div>
+            <div id="now_playing" class="themoviedb-category tab-pane">
+                <ul id="now_playing-grid" class="thumbnails"></ul>
+            </div>
+            <div id="top_rated" class="themoviedb-category tab-pane">
+                <ul id="top_rated-grid" class="thumbnails"></ul>
+            </div>
+            <div id="upcoming" class="themoviedb-category tab-pane">
+                <ul id="upcoming-grid" class="thumbnails"></ul>
+            </div>
+            <div id="history" class="tab-pane">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Log</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-grid"></tbody>
+                </table>
+            </div>
+            <div id="result" class="tab-pane">
+                <ul id="result-grid" class="thumbnails"></ul>
+            </div>
+        </div>
+        <div class="spinner"></div>
+    </div>
+</div>
